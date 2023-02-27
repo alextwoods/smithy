@@ -204,11 +204,16 @@ public final class Endpoint extends MandatorySourceLocation implements ToSmithyB
 
     @Override
     public Node toNode() {
-        return ObjectNode.builder()
-                .withMember(URL, url)
-                .withMember(PROPERTIES, propertiesNode())
-                .withMember(HEADERS, headersNode())
-                .build();
+        ObjectNode.Builder builder = ObjectNode.builder()
+                .withMember(URL, url);
+        if (!properties.isEmpty()) {
+            builder.withMember(PROPERTIES, propertiesNode());
+        }
+
+        if (!headers.isEmpty()) {
+            builder.withMember(HEADERS, headersNode());
+        }
+        return builder.build();
     }
 
     private Node propertiesNode() {
