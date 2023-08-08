@@ -108,7 +108,8 @@ Trait value
       - A list of regional special cases - endpoints for a region that do not follow the
         standard patterns.
 
-
+Conflicts with
+    :ref:`aws.endpoints#nonRegionalizedEndpoints-trait`
 
 Most AWS services are regionalized and are strongly encouraged to follow
 the standard endpoint patterns defined above, both for consistency and to
@@ -136,12 +137,6 @@ a service that use standard regional endpoints, but uses a non-standard pattern 
 FIPS endpoints in US GovCloud:
 
 .. code-block:: smithy
-
-    $version: "2"
-
-    namespace smithy.example
-
-    use aws.endpoints#standardRegionalEndpoints
 
     @standardRegionalEndpoints{
         partitionSpecialCases: [
@@ -182,9 +177,9 @@ A PartitionSpecialCase object contains the following properties:
       - ``boolean``
       - When ``true`` the special case will apply to fips endpoint variants.
 
----------------------------
+------------------------
 RegionSpecialCase object
----------------------------
+------------------------
 
 A RegionSpecialCase object contains the following properties:
 
@@ -210,3 +205,126 @@ A RegionSpecialCase object contains the following properties:
     * - signingRegion
       - ``string``
       - Override the signingRegion used for this region.
+
+.. smithy-trait:: aws.endpoints#nonRegionalizedEndpoints
+.. _aws.endpoints#nonRegionalizedEndpoints-trait:
+
+-------------------------------------------------
+``aws.endpoints#nonRegionalizedEndpoints`` trait
+-------------------------------------------------
+
+Summary
+    Indicates that a service is non-regionalized and a single endpoint should be resolved
+    per partition.
+
+Trait selector
+    ``service``
+Trait value
+    A ``structure`` with the following properties:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 10 30 60
+
+    * - Property
+      - Type
+      - Description
+    * - endpointPattern
+      - ``string``
+      - **Required** The pattern to use for the partition endpoint.  This value can be set to ``service_dnsSuffix`` to
+        use the ``{service}.{dnsSuffix}`` pattern or ``service_region_dnsSuffix`` to use
+        ``{service}.{region}.{dnsSuffix}``.
+    * - partitionEndpointSpecialCases
+      - ``List<PartitionEndpointSpecialCase>`` of `PartitionEndpointSpecialCase object`_
+      - A list of partition endpoint special cases - partitions that do not follow the
+        services standard patterns or are located in a region other than the partition's
+        ``defaultGlobalRegion``.
+
+Conflicts with
+    :ref:`aws.endpoints#standardRegionalEndpoints-trait`
+
+Non-regionalized (also known as "global" services) resolve a single endpoint per partition.
+That single endpoint is located in the partition's ``defaultGlobalRegion``. Non-regionalized
+services should follow one of two standard patterns:
+
+- ``service_dnsSuffix``: ``{service}.{dnsSuffix}``
+- ``service_region_dnsSuffix``: ``{service}.{region}.{dnsSuffix}``
+
+The following example defines a non-regionalized service that uses ``{service}.{dnsSuffix}``:
+
+.. code-block:: smithy
+
+    $version: "2"
+
+    namespace smithy.example
+
+    use aws.endpoints#nonRegionalizedEndpoints
+
+    @nonRegionalizedEndpoints(endpointPattern: "service_dnsSuffix")
+    service MyService {
+        version: "2020-04-02"
+    }
+
+Services should follow the standard patterns; however, occasionally there are special cases.
+The following example defines a non-regionalized service that uses a special case pattern in
+the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` partition:
+
+.. code-block:: smithy
+
+    @nonRegionalizedEndpoints {
+        endpointPattern: "service_dnsSuffix",
+        partitionEndpointSpecialCases: [
+            {
+                partition: "aws",
+                endpoint: "myservice.global.amazonaws.com"
+            },
+            {
+                partition: "aws-cn",
+                region: "cn-north-1"
+            }
+        ]
+    }
+    service MyService {
+        version: "2020-04-02"
+    }
+
+-----------------------------------
+PartitionEndpointSpecialCase object
+-----------------------------------
+
+A PartitionEndpointSpecialCase object contains the following properties:
+
+.. list-table::
+    :header-rows: 1
+    :widths: 10 30 60
+
+    * - Property name
+      - Type
+      - Description
+    * - partition
+      - ``string``
+      - **Required**. The partition to special case (example: "aws").
+    * - endpoint
+      - ``string``
+      - The special cased endpoint template.
+    * - region
+      - ``string``
+      - Override the ``defaultGlobalRegion`` used in this partition.
+
+.. smithy-trait:: aws.endpoints#dualStackOnlyEndpoints
+.. _aws.endpoints#dualStackOnlyEndpoints-trait:
+
+-------------------------------------------------
+``aws.endpoints#dualStackOnlyEndpoints`` trait
+-------------------------------------------------
+
+Summary
+    Indicates that a service has only dualStack endpoints and should not
+    have the `useDualStack` endpoint parameter.
+
+Trait selector
+    ``service``
+Trait value
+    Annotation trait
+
+TODO: Provide more details and an example.

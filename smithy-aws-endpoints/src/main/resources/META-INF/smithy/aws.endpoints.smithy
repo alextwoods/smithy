@@ -16,6 +16,7 @@ structure endpointsModifier { }
 /// standard regional endpoint patterns.
 @trait(
     selector: "service",
+    conflicts: [nonRegionalizedEndpoints],
     breakingChanges: [{change: "remove"}]
 )
 @endpointsModifier
@@ -26,7 +27,7 @@ structure standardRegionalEndpoints {
 
 @private
 list PartitionSpecialCaseList {
-    member: PartitionSpecpartitionialCase
+    member: PartitionSpecialCase
 }
 
 @private
@@ -58,3 +59,46 @@ structure RegionSpecialCase {
     fips: Boolean,
     signingRegion: String
 }
+
+/// Marks that a services is non-regionalized and has
+/// a single endpoint in each partition.
+@trait(
+    selector: "service",
+    conflicts: [standardRegionalEndpoints],
+    breakingChanges: [{change: "any"}]
+)
+@endpointsModifier
+structure nonRegionalizedEndpoints {
+    @required
+    endpointPattern: PartitionEndpointPattern,
+
+    partitionEndpointSpecialCases: PartitionEndpointSpecialCaseList,
+}
+
+@private
+enum PartitionEndpointPattern {
+    SERVICE_DNSSUFFIX = "service_dnsSuffix"
+    SERVICE_REGION_DNSSUFFIX = "service_region_dnsSuffix"
+}
+
+@private
+list PartitionEndpointSpecialCaseList {
+    member: PartitionEndpointSpecialCase
+}
+
+@private
+structure PartitionEndpointSpecialCase {
+    @required
+    partition: String,
+
+    endpoint: String,
+    region: String
+}
+
+/// Marks that a services has only dualStack endpoints.
+@trait(
+    selector: "service",
+    breakingChanges: [{change: "any"}]
+)
+@endpointsModifier
+structure dualStackOnlyEndpoints { }
