@@ -102,3 +102,11 @@ structure PartitionEndpointSpecialCase {
 )
 @endpointsModifier
 structure dualStackOnlyEndpoints { }
+
+/// Marks that a services has hand written endpoint rules.
+@trait(
+    selector: "service",
+    breakingChanges: [{change: "any"}]
+)
+@endpointsModifier
+structure rulesBasedEndpoints { }

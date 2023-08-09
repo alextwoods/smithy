@@ -314,17 +314,62 @@ A PartitionEndpointSpecialCase object contains the following properties:
 .. smithy-trait:: aws.endpoints#dualStackOnlyEndpoints
 .. _aws.endpoints#dualStackOnlyEndpoints-trait:
 
--------------------------------------------------
+----------------------------------------------
 ``aws.endpoints#dualStackOnlyEndpoints`` trait
--------------------------------------------------
+----------------------------------------------
 
 Summary
     Indicates that a service has only dualStack endpoints and should not
-    have the `useDualStack` endpoint parameter.
+    have the ``useDualStackEndpoint`` endpoint parameter.
 
 Trait selector
     ``service``
 Trait value
     Annotation trait
 
-TODO: Provide more details and an example.
+Adding the dualStackOnlyEndpoints to a service modifies the generation of endpoints from
+_aws.endpoints#standardRegionalEndpoints-trait or _aws.endpoints#nonRegionalizedEndpoints-trait
+and removes the ``useDualStackEndpoint`` parameter and defaults the behavior to dualstack for
+all partitions that support it.
+
+The following example specifies a service that uses standard regional endpoint patterns and
+is dualStack only:
+
+.. code-block:: smithy
+
+     @standardRegionalEndpoints
+     @dualStackOnlyEndpoints
+     service MyService {
+         version: "2020-04-02"
+     }
+
+.. smithy-trait:: aws.endpoints#rulesBasedEndpoints
+.. _aws.endpoints#rulesBasedEndpoints-trait:
+
+-------------------------------------------
+``aws.endpoints#rulesBasedEndpoints`` trait
+-------------------------------------------
+
+Summary
+    Indicates that a service has hand written endpoint rules.
+
+Trait selector
+    ``service``
+Trait value
+    Annotation trait
+
+Services marked with the ``rulesBasedEndpoints`` trait have hand written endpoint rules that
+extend or replace their standard generated endpoint rules.  This trait marks the presence
+of hand written rules, which may be added to the model by a transformer,
+but does not specify their behavior.
+
+The following example specifies a service that has standard regional endpoints extended with
+hand written rules:
+
+.. code-block:: smithy
+
+     @standardRegionalEndpoints
+     @rulesBasedEndpoints
+     service MyService {
+         version: "2020-04-02"
+     }
