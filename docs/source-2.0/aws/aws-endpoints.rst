@@ -136,7 +136,7 @@ Trait value
         standard patterns.
 
 Conflicts with
-    :ref:`aws.endpoints#nonRegionalizedEndpoints-trait`
+    :ref:`aws.endpoints#standardPartitionalEndpoints-trait`
 
 Most AWS services are regionalized and are strongly encouraged to follow
 the standard endpoint patterns defined above for consistency, and to
@@ -233,17 +233,17 @@ A RegionSpecialCase object contains the following properties:
       - ``string``
       - Override the signingRegion used for this region.
 
-.. smithy-trait:: aws.endpoints#nonRegionalizedEndpoints
-.. _aws.endpoints#nonRegionalizedEndpoints-trait:
+.. smithy-trait:: aws.endpoints#standardPartitionalEndpoints
+.. _aws.endpoints#standardPartitionalEndpoints-trait:
 
--------------------------------------------------
-``aws.endpoints#nonRegionalizedEndpoints`` trait
--------------------------------------------------
+----------------------------------------------------
+``aws.endpoints#standardPartitionalEndpoints`` trait
+----------------------------------------------------
 
 Summary
     An :ref:`endpoints modifier trait <aws.endpoints#endpointsModifier-trait>`
     that indicates that a service is
-    `non-regionalized <https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html#global-services-that-are-unique-by-partition>`_
+    `partitional <https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html#global-services-that-are-unique-by-partition>`_
     and a single endpoint should be resolved per partition.
 Trait selector
     ``service``
@@ -271,14 +271,14 @@ Trait value
 Conflicts with
     :ref:`aws.endpoints#standardRegionalEndpoints-trait`
 
-Non-regionalized (also known as "global" services) resolve a single endpoint per partition.
-That single endpoint is located in the partition's ``defaultGlobalRegion``. Non-regionalized
+Partitional services (also known as "global" services) resolve a single endpoint per partition.
+That single endpoint is located in the partition's ``defaultGlobalRegion``. Partitional
 services should follow one of two standard patterns:
 
 - ``service_dnsSuffix``: ``{service}.{dnsSuffix}``
 - ``service_region_dnsSuffix``: ``{service}.{region}.{dnsSuffix}``
 
-The following example defines a non-regionalized service that uses ``{service}.{dnsSuffix}``:
+The following example defines a partitional service that uses ``{service}.{dnsSuffix}``:
 
 .. code-block:: smithy
 
@@ -286,20 +286,20 @@ The following example defines a non-regionalized service that uses ``{service}.{
 
     namespace smithy.example
 
-    use aws.endpoints#nonRegionalizedEndpoints
+    use aws.endpoints#standardPartitionalEndpoints
 
-    @nonRegionalizedEndpoints(endpointPattern: "service_dnsSuffix")
+    @standardPartitionalEndpoints(endpointPattern: "service_dnsSuffix")
     service MyService {
         version: "2020-04-02"
     }
 
 Services should follow the standard patterns; however, occasionally there are special cases.
-The following example defines a non-regionalized service that uses a special case pattern in
+The following example defines a partitional service that uses a special case pattern in
 the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` partition:
 
 .. code-block:: smithy
 
-    @nonRegionalizedEndpoints {
+    @standardPartitionalEndpoints {
         endpointPattern: "service_dnsSuffix",
         partitionEndpointSpecialCases: [
             {
@@ -357,7 +357,7 @@ Trait value
     Annotation trait
 
 Adding the dualStackOnlyEndpoints to a service modifies the generation of endpoints from
-:ref:`aws.endpoints#standardRegionalEndpoints-trait` or :ref:`aws.endpoints#nonRegionalizedEndpoints-trait`,
+:ref:`aws.endpoints#standardRegionalEndpoints-trait` or :ref:`aws.endpoints#standardPartitionalEndpoints-trait`,
 removes the ``useDualStackEndpoint`` parameter, and defaults the behavior to dual stack for
 all partitions that support it.
 
