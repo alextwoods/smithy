@@ -4,7 +4,7 @@
 AWS Declarative Endpoint Traits
 ===============================
 
-This document defines AWS Declarative endpoint traits.
+This document defines AWS declarative endpoint traits.
 
 
 .. smithy-trait:: aws.endpoints#endpointsModifier
@@ -15,8 +15,7 @@ This document defines AWS Declarative endpoint traits.
 -----------------------------------------
 
 Summary
-    A meta-trait that marks a trait as an endpoint modifier and describes the behavior
-    of endpoint resolution for services or operations.  Traits that are marked with this trait are
+    A meta-trait that marks a trait as an endpoint modifier.  Traits that are marked with this trait are
     applied to service shapes or operation shapes to indicate how a client can resolve
     endpoints for that service or operation.
 Trait selector
@@ -46,7 +45,7 @@ the hypothetical ``fooExample`` endpoint modifier.
         version: "2020-04-02"
     }
 
-Because endpointsModifier definitions are just specialized shapes, they
+Because endpoint modification definitions are just specialized shapes, they
 can also support configuration settings.
 
 .. code-block:: smithy
@@ -79,7 +78,8 @@ can also support configuration settings.
 -------------------------------------------------
 
 Summary
-    Indicates that a services endpoints should be resolved using the standard regional
+    An :ref:`endpoints modifier trait <aws.endpoints#endpointsModifier-trait>`
+    that indicates that a service's endpoints should be resolved using the standard AWS regional
     patterns:
 
     - Default: ``{service}.{region}.{dnsSuffix}``
@@ -100,11 +100,11 @@ Trait value
       - Type
       - Description
     * - partitionSpecialCases
-      - ``List<PartitionSpecialCase>`` of `PartitionSpecialCase object`_
+      - ``list`` of `PartitionSpecialCase object`_
       - A list of partition special cases - endpoints for a partition that do not follow the
         standard patterns.
     * - regionSpecialCases
-      - ``List<RegionSpecialCase>`` of `RegionSpecialCase object`_
+      - ``list`` of `RegionSpecialCase object`_
       - A list of regional special cases - endpoints for a region that do not follow the
         standard patterns.
 
@@ -112,8 +112,8 @@ Conflicts with
     :ref:`aws.endpoints#nonRegionalizedEndpoints-trait`
 
 Most AWS services are regionalized and are strongly encouraged to follow
-the standard endpoint patterns defined above, both for consistency and to
-ensure that endpoints are forwards compatible and that SDK updates are
+the standard endpoint patterns defined above for consistency, and to
+ensure that endpoints are forwards compatible, and that SDK updates are
 not required when the service launches in a new region or partition.
 
 The following example defines a service that uses the standard regional endpoints:
@@ -151,11 +151,11 @@ FIPS endpoints in US GovCloud:
         version: "2020-04-02"
     }
 
----------------------------
-PartitionSpecialCase object
----------------------------
+``PartitionSpecialCase`` object
+-------------------------------
 
-A PartitionSpecialCase object contains the following properties:
+A PartitionSpecialCase defines the endpoint pattern to apply for all regional endpoints
+in the given partition. A PartitionSpecialCase object contains the following properties:
 
 .. list-table::
     :header-rows: 1
@@ -177,9 +177,9 @@ A PartitionSpecialCase object contains the following properties:
       - ``boolean``
       - When ``true`` the special case will apply to fips endpoint variants.
 
-------------------------
-RegionSpecialCase object
-------------------------
+
+``RegionSpecialCase`` object
+----------------------------
 
 A RegionSpecialCase object contains the following properties:
 
@@ -214,9 +214,10 @@ A RegionSpecialCase object contains the following properties:
 -------------------------------------------------
 
 Summary
-    Indicates that a service is non-regionalized and a single endpoint should be resolved
-    per partition.
-
+    An :ref:`endpoints modifier trait <aws.endpoints#endpointsModifier-trait>`
+    that indicates that a service is
+    `non-regionalized <https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html#global-services-that-are-unique-by-partition>`_
+    and a single endpoint should be resolved per partition.
 Trait selector
     ``service``
 Trait value
@@ -235,7 +236,7 @@ Trait value
         use the ``{service}.{dnsSuffix}`` pattern or ``service_region_dnsSuffix`` to use
         ``{service}.{region}.{dnsSuffix}``.
     * - partitionEndpointSpecialCases
-      - ``List<PartitionEndpointSpecialCase>`` of `PartitionEndpointSpecialCase object`_
+      - ``list`` of `PartitionEndpointSpecialCase object`_
       - A list of partition endpoint special cases - partitions that do not follow the
         services standard patterns or are located in a region other than the partition's
         ``defaultGlobalRegion``.
@@ -288,9 +289,8 @@ the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` pa
         version: "2020-04-02"
     }
 
------------------------------------
-PartitionEndpointSpecialCase object
------------------------------------
+``PartitionEndpointSpecialCase`` object
+---------------------------------------
 
 A PartitionEndpointSpecialCase object contains the following properties:
 
@@ -319,21 +319,23 @@ A PartitionEndpointSpecialCase object contains the following properties:
 ----------------------------------------------
 
 Summary
-    Indicates that a service has only dualStack endpoints and should not
-    have the ``useDualStackEndpoint`` endpoint parameter.
-
+    An :ref:`endpoints modifier trait <aws.endpoints#endpointsModifier-trait>`
+    that indicates that a service has only
+    `dual stack endpoints <https://docs.aws.amazon.com/general/latest/gr/rande.html#dual-stack-endpoints>`_,
+    does not support IPV4 only endpoints, and should not have the ``useDualStackEndpoint`` endpoint parameter.
+    Dual stack endpoints support IPV4 and IPV6.
 Trait selector
     ``service``
 Trait value
     Annotation trait
 
 Adding the dualStackOnlyEndpoints to a service modifies the generation of endpoints from
-_aws.endpoints#standardRegionalEndpoints-trait or _aws.endpoints#nonRegionalizedEndpoints-trait
-and removes the ``useDualStackEndpoint`` parameter and defaults the behavior to dualstack for
+:ref:`aws.endpoints#standardRegionalEndpoints-trait` or :ref:`aws.endpoints#nonRegionalizedEndpoints-trait`,
+removes the ``useDualStackEndpoint`` parameter, and defaults the behavior to dual stack for
 all partitions that support it.
 
 The following example specifies a service that uses standard regional endpoint patterns and
-is dualStack only:
+is dual stack only:
 
 .. code-block:: smithy
 
@@ -351,8 +353,8 @@ is dualStack only:
 -------------------------------------------
 
 Summary
-    Indicates that a service has hand written endpoint rules.
-
+    An :ref:`endpoints modifier trait <aws.endpoints#endpointsModifier-trait>`
+    that indicates that a service has hand written endpoint rules.
 Trait selector
     ``service``
 Trait value
@@ -361,7 +363,9 @@ Trait value
 Services marked with the ``rulesBasedEndpoints`` trait have hand written endpoint rules that
 extend or replace their standard generated endpoint rules.  This trait marks the presence
 of hand written rules, which may be added to the model by a transformer,
-but does not specify their behavior.
+but does not specify their behavior.  ``rulesBasedEndpoints`` may extend the functionality of
+endpoint behavior described through other :ref:`endpoints modifier traits <aws.endpoints#endpointsModifier-trait>`
+by modifying the generated :ref:`EndpointRuleSet <smithy.rules#endpointRuleSet-trait>`.
 
 The following example specifies a service that has standard regional endpoints extended with
 hand written rules:

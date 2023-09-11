@@ -4,8 +4,8 @@ namespace aws.endpoints
 
 /// Marks a trait as an endpoints modifier defining trait.
 ///
-/// The targeted trait must only be applied to service shapes or operation
-/// shapes, must be a structure, and must have the `trait` trait.
+/// The targeted trait must only be applied to service shapes,
+/// must be a structure, and must have the `trait` trait.
 @trait(
     selector: "structure[trait|trait]",
     breakingChanges: [{change: "presence"}]
@@ -21,7 +21,9 @@ structure endpointsModifier { }
 )
 @endpointsModifier
 structure standardRegionalEndpoints {
+    /// A list of partition special cases - endpoints for a partition that do not follow the standard patterns.
     partitionSpecialCases: PartitionSpecialCaseList,
+    /// A list of regional special cases - endpoints for a region that do not follow the standard patterns.
     regionSpecialCases: RegionSpecialCaseList
 }
 
@@ -69,9 +71,12 @@ structure RegionSpecialCase {
 )
 @endpointsModifier
 structure nonRegionalizedEndpoints {
+    /// The pattern to use for the partition endpoint.
     @required
     endpointPattern: PartitionEndpointPattern,
 
+    /// A list of partition endpoint special cases - partitions that do not follow the services standard patterns
+    /// or are located in a region other than the partition's defaultGlobalRegion.
     partitionEndpointSpecialCases: PartitionEndpointSpecialCaseList,
 }
 
