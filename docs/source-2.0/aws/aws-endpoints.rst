@@ -6,6 +6,33 @@ AWS Declarative Endpoint Traits
 
 This document defines AWS declarative endpoint traits.
 
+.. _aws-endpoints-overview:
+
+----------------------
+AWS Endpoints Overview
+----------------------
+
+An endpoint is used to connect programmatically to an AWS service. An endpoint is the URL of the
+entry point for an AWS web service.
+
+Most AWS services are regional: they offer regional endpoints and the service's resources are independent
+of similar resources in other regions.
+
+.. _aws-region:
+
+Region
+    Each `region <https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/regions.html>`_
+    consists of multiple availability zones within a single geographic area. Regions themselves are isolated
+    and independent from other regions.
+
+.. _aws-partition:
+
+Partition
+    AWS groups regions into
+    `partitions <https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/partitions.html>`_.
+    Every region is in exactly one partition and each partition has one or more regions.
+    AWS commercial Regions are in the ``aws`` partition, Regions in China are in the ``aws-cn`` partition,
+    and AWS GovCloud Regions are in the ``aws-us-gov`` partition.
 
 .. smithy-trait:: aws.endpoints#endpointsModifier
 .. _aws.endpoints#endpointsModifier-trait:
