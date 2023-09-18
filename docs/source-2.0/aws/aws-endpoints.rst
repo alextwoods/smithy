@@ -34,6 +34,21 @@ Partition
     AWS commercial Regions are in the ``aws`` partition, Regions in China are in the ``aws-cn`` partition,
     and AWS GovCloud Regions are in the ``aws-us-gov`` partition.
 
+.. _fips-endpoints:
+
+FIPS Endpoints
+    Some AWS services have endpoints that support Federal Information Processing Standard (FIPS) 140-2.
+    For a list of FIPS endpoints, see
+    `FIPS endpoints by Service
+    <http://aws.amazon.com/compliance/fips/#FIPS_Endpoints_by_Service>`_.
+
+.. _dualstack-endpoints:
+
+Dual stack Endpoints
+    Some AWS services offer dual stack endpoints, so that you can access them using either IPv4 or IPv6 requests.
+    For a list of services that support dual stack endpoints, see `AWS services that support IPv6
+    <https://docs.aws.amazon.com/vpc/latest/userguide/aws-ipv6-support.html>`_.
+
 .. smithy-trait:: aws.endpoints#endpointsModifier
 .. _aws.endpoints#endpointsModifier-trait:
 
@@ -127,12 +142,12 @@ Trait value
       - Type
       - Description
     * - partitionSpecialCases
-      - ``list`` of `PartitionSpecialCase object`_
-      - A list of partition special cases - endpoints for a partition that do not follow the
+      - ``map`` of partition to `PartitionSpecialCase object`_
+      - A map of partition to partition special cases - endpoints for a partition that do not follow the
         standard patterns.
     * - regionSpecialCases
-      - ``list`` of `RegionSpecialCase object`_
-      - A list of regional special cases - endpoints for a region that do not follow the
+      - ``map`` of region to `RegionSpecialCase object`_
+      - A map of region to regional special cases - endpoints for a region that do not follow the
         standard patterns.
 
 Conflicts with
@@ -166,13 +181,14 @@ FIPS endpoints in US GovCloud:
 .. code-block:: smithy
 
     @standardRegionalEndpoints{
-        partitionSpecialCases: [
-            {
-                partition: "aws-us-gov",
-                endpoint: "myservice.{region}.{dnsSuffix}",
-                fips: true
-            }
-        ]
+        partitionSpecialCases: {
+            aws-us-gov: [
+                {
+                    endpoint: "myservice.{region}.{dnsSuffix}",
+                    fips: true
+                }
+            ]
+        }
     }
     service MyService {
         version: "2020-04-02"
@@ -191,9 +207,6 @@ in the given partition. A PartitionSpecialCase object contains the following pro
     * - Property name
       - Type
       - Description
-    * - partition
-      - ``string``
-      - **Required**. The partition to special case (example: "aws").
     * - endpoint
       - ``string``
       - **Required**. The special cased endpoint template.
@@ -217,9 +230,6 @@ A RegionSpecialCase object contains the following properties:
     * - Property name
       - Type
       - Description
-    * - region
-      - ``string``
-      - **Required**. The region to special case (example: "us-west-2").
     * - endpoint
       - ``string``
       - **Required**. The special cased endpoint template.
@@ -257,14 +267,14 @@ Trait value
     * - Property
       - Type
       - Description
-    * - endpointPattern
+    * - endpointPatternType
       - ``string``
-      - **Required** The pattern to use for the partition endpoint.  This value can be set to ``service_dnsSuffix`` to
+      - **Required** The pattern type to use for the partition endpoint.  This value can be set to ``service_dnsSuffix`` to
         use the ``{service}.{dnsSuffix}`` pattern or ``service_region_dnsSuffix`` to use
         ``{service}.{region}.{dnsSuffix}``.
     * - partitionEndpointSpecialCases
-      - ``list`` of `PartitionEndpointSpecialCase object`_
-      - A list of partition endpoint special cases - partitions that do not follow the
+      - ``map`` of partition to `PartitionEndpointSpecialCase object`_
+      - A map of partition to partition endpoint special cases - partitions that do not follow the
         services standard patterns or are located in a region other than the partition's
         ``defaultGlobalRegion``.
 
@@ -288,7 +298,7 @@ The following example defines a partitional service that uses ``{service}.{dnsSu
 
     use aws.endpoints#standardPartitionalEndpoints
 
-    @standardPartitionalEndpoints(endpointPattern: "service_dnsSuffix")
+    @standardPartitionalEndpoints(endpointPatternType: "service_dnsSuffix")
     service MyService {
         version: "2020-04-02"
     }
@@ -300,17 +310,11 @@ the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` pa
 .. code-block:: smithy
 
     @standardPartitionalEndpoints {
-        endpointPattern: "service_dnsSuffix",
-        partitionEndpointSpecialCases: [
-            {
-                partition: "aws",
-                endpoint: "myservice.global.amazonaws.com"
-            },
-            {
-                partition: "aws-cn",
-                region: "cn-north-1"
-            }
-        ]
+        endpointPatternType: "service_dnsSuffix",
+        partitionEndpointSpecialCases: {
+            aws: [{endpoint: "myservice.global.amazonaws.com"}],
+            aws-cn: [{region: "cn-north-1"}]
+        }
     }
     service MyService {
         version: "2020-04-02"
@@ -328,15 +332,18 @@ A PartitionEndpointSpecialCase object contains the following properties:
     * - Property name
       - Type
       - Description
-    * - partition
-      - ``string``
-      - **Required**. The partition to special case (example: "aws").
     * - endpoint
       - ``string``
       - The special cased endpoint template.
     * - region
       - ``string``
       - Override the ``defaultGlobalRegion`` used in this partition.
+    * - dualStack
+      - ``boolean``
+      - When ``true`` the special case will apply to dualstack endpoint variants.
+    * - fips
+      - ``boolean``
+      - When ``true`` the special case will apply to fips endpoint variants.
 
 .. smithy-trait:: aws.endpoints#dualStackOnlyEndpoints
 .. _aws.endpoints#dualStackOnlyEndpoints-trait:
@@ -356,7 +363,7 @@ Trait selector
 Trait value
     Annotation trait
 
-Adding the dualStackOnlyEndpoints to a service modifies the generation of endpoints from
+Adding the ``dualStackOnlyEndpoints`` trait to a service modifies the generation of endpoints from
 :ref:`aws.endpoints#standardRegionalEndpoints-trait` or :ref:`aws.endpoints#standardPartitionalEndpoints-trait`,
 removes the ``useDualStackEndpoint`` parameter, and defaults the behavior to dual stack for
 all partitions that support it.
@@ -389,7 +396,7 @@ Trait value
 
 Services marked with the ``rulesBasedEndpoints`` trait have hand written endpoint rules that
 extend or replace their standard generated endpoint rules.  This trait marks the presence
-of hand written rules, which may be added to the model by a transformer,
+of hand written rules, which are added to the model by a transformer,
 but does not specify their behavior.  ``rulesBasedEndpoints`` may extend the functionality of
 endpoint behavior described through other :ref:`endpoints modifier traits <aws.endpoints#endpointsModifier-trait>`
 by modifying the generated :ref:`EndpointRuleSet <smithy.rules#endpointRuleSet-trait>`.

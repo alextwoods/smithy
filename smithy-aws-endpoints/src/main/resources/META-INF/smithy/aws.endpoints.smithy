@@ -22,9 +22,15 @@ structure endpointsModifier { }
 @endpointsModifier
 structure standardRegionalEndpoints {
     /// A list of partition special cases - endpoints for a partition that do not follow the standard patterns.
-    partitionSpecialCases: PartitionSpecialCaseList,
+    partitionSpecialCases: PartitionSpecialCaseMap,
     /// A list of regional special cases - endpoints for a region that do not follow the standard patterns.
-    regionSpecialCases: RegionSpecialCaseList
+    regionSpecialCases: RegionSpecialCaseMap
+}
+
+@private
+map PartitionSpecialCaseMap {
+    key: String,
+    value: PartitionSpecialCaseList
 }
 
 @private
@@ -35,13 +41,16 @@ list PartitionSpecialCaseList {
 @private
 structure PartitionSpecialCase {
     @required
-    partition: String,
-
-    @required
     endpoint: String,
 
     dualStack: Boolean,
     fips: Boolean
+}
+
+@private
+map RegionSpecialCaseMap {
+    key: String,
+    value: RegionSpecialCaseList
 }
 
 @private
@@ -51,9 +60,6 @@ list RegionSpecialCaseList {
 
 @private
 structure RegionSpecialCase {
-    @required
-    region: String,
-
     @required
     endpoint: String,
 
@@ -71,13 +77,13 @@ structure RegionSpecialCase {
 )
 @endpointsModifier
 structure nonRegionalizedEndpoints {
-    /// The pattern to use for the partition endpoint.
+    /// The pattern type to use for the partition endpoint.
     @required
-    endpointPattern: PartitionEndpointPattern,
+    endpointPatternType: PartitionEndpointPattern,
 
     /// A list of partition endpoint special cases - partitions that do not follow the services standard patterns
     /// or are located in a region other than the partition's defaultGlobalRegion.
-    partitionEndpointSpecialCases: PartitionEndpointSpecialCaseList,
+    partitionEndpointSpecialCases: PartitionEndpointSpecialCaseMap,
 }
 
 @private
@@ -87,17 +93,22 @@ enum PartitionEndpointPattern {
 }
 
 @private
+map PartitionEndpointSpecialCaseMap {
+    key: String,
+    value: PartitionSpecialCaseList
+}
+
+@private
 list PartitionEndpointSpecialCaseList {
     member: PartitionEndpointSpecialCase
 }
 
 @private
 structure PartitionEndpointSpecialCase {
-    @required
-    partition: String,
-
     endpoint: String,
-    region: String
+    region: String,
+    dualStack: Boolean,
+    fips: Boolean,
 }
 
 /// Marks that a services has only dualStack endpoints.
