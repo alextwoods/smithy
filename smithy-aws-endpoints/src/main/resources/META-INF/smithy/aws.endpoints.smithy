@@ -16,7 +16,7 @@ structure endpointsModifier { }
 /// standard regional endpoint patterns.
 @trait(
     selector: "service",
-    conflicts: [nonRegionalizedEndpoints],
+    conflicts: [standardPartitionalEndpoints],
     breakingChanges: [{change: "remove"}]
 )
 @endpointsModifier
