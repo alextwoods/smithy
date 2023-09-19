@@ -76,7 +76,7 @@ structure RegionSpecialCase {
     breakingChanges: [{change: "any"}]
 )
 @endpointsModifier
-structure nonRegionalizedEndpoints {
+structure standardPartitionalEndpoints {
     /// The pattern type to use for the partition endpoint.
     @required
     endpointPatternType: PartitionEndpointPattern,
@@ -95,7 +95,7 @@ enum PartitionEndpointPattern {
 @private
 map PartitionEndpointSpecialCaseMap {
     key: String,
-    value: PartitionSpecialCaseList
+    value: PartitionEndpointSpecialCaseList
 }
 
 @private
