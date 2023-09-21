@@ -180,7 +180,7 @@ FIPS endpoints in US GovCloud:
 
 .. code-block:: smithy
 
-    @standardRegionalEndpoints{
+    @standardRegionalEndpoints(
         partitionSpecialCases: {
             aws-us-gov: [
                 {
@@ -189,7 +189,7 @@ FIPS endpoints in US GovCloud:
                 }
             ]
         }
-    }
+    )
     service MyService {
         version: "2020-04-02"
     }
@@ -309,13 +309,13 @@ the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` pa
 
 .. code-block:: smithy
 
-    @standardPartitionalEndpoints {
+    @standardPartitionalEndpoints(
         endpointPatternType: "service_dnsSuffix",
         partitionEndpointSpecialCases: {
             aws: [{endpoint: "myservice.global.amazonaws.com"}],
             aws-cn: [{region: "cn-north-1"}]
         }
-    }
+    )
     service MyService {
         version: "2020-04-02"
     }
