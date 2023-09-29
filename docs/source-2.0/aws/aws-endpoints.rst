@@ -395,14 +395,15 @@ Trait value
     Annotation trait
 
 Services marked with the ``rulesBasedEndpoints`` trait have hand written endpoint rules that
-extend or replace their standard generated endpoint rules.  This trait marks the presence
-of hand written rules, which are added to the model by a transformer,
-but does not specify their behavior.  ``rulesBasedEndpoints`` may extend the functionality of
-endpoint behavior described through other :ref:`endpoints modifier traits <aws.endpoints#endpointsModifier-trait>`
-by modifying the generated :ref:`EndpointRuleSet <smithy.rules#endpointRuleSet-trait>`.
+extend or replace their standard generated endpoint rules through an external mechanism.
+This trait marks the presence of hand written rules, which are added to the model by a transformer,
+but does not specify their behavior.
 
-The following example specifies a service that has standard regional endpoints extended with
-hand written rules:
+A service with ``rulesBasedEndpoints`` may extend the functionality of
+endpoint behavior described in the model through other
+:ref:`endpoints modifier traits <aws.endpoints#endpointsModifier-trait>`
+by modifying the generated :ref:`EndpointRuleSet <smithy.rules#endpointRuleSet-trait>`.
+The following example specifies a service that has standard regional endpoints extended with hand written rules:
 
 .. code-block:: smithy
 
