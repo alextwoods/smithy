@@ -34,6 +34,7 @@ import software.amazon.smithy.utils.ToSmithyBuilder;
 public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyBuilder<FunctionNode> {
     private static final String ARGV = "argv";
     private static final String FN = "fn";
+    private static final String MAP = "map";
 
     private final List<Expression> arguments = new ArrayList<>();
     private final StringNode name;
