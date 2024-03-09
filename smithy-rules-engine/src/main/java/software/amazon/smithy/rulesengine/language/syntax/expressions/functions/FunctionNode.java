@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import software.amazon.smithy.model.FromSourceLocation;
 import software.amazon.smithy.model.SourceException;
 import software.amazon.smithy.model.SourceLocation;
@@ -38,6 +39,7 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
 
     private final List<Expression> arguments = new ArrayList<>();
     private final StringNode name;
+    private final Optional<Expression> map;
     private final SourceLocation sourceLocation;
 
     FunctionNode(Builder builder) {
@@ -45,6 +47,7 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
             arguments.add(expression.toExpression());
         }
         name = SmithyBuilder.requiredState("functionName", builder.function);
+        map = builder.map.map((e) -> e.toExpression());
         sourceLocation = builder.getSourceLocation();
     }
 
@@ -52,7 +55,7 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
      * Constructs a {@link FunctionNode} for the given function name and arguments.
      *
      * @param functionName the function name.
-     * @param arguments zero or more expressions as arguments to the function.
+     * @param arguments    zero or more expressions as arguments to the function.
      * @return the {@link FunctionNode}.
      */
     public static FunctionNode ofExpressions(String functionName, ToExpression... arguments) {
@@ -62,9 +65,9 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
     /**
      * Constructs a {@link FunctionNode} for the given function name and arguments.
      *
-     * @param functionName the function name.
+     * @param functionName   the function name.
      * @param sourceLocation the source location for the function.
-     * @param arguments zero or more expressions as arguments to the function.
+     * @param arguments      zero or more expressions as arguments to the function.
      * @return the {@link FunctionNode}.
      */
     public static FunctionNode ofExpressions(
@@ -75,6 +78,41 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
         return builder()
                 .sourceLocation(sourceLocation)
                 .name(StringNode.from(functionName))
+                .arguments(Arrays.asList(arguments))
+                .build();
+    }
+
+    /**
+     * Constructs a {@link FunctionNode} that maps the given function over an array and arguments.
+     *
+     * @param functionName the function name.
+     * @param on           an expression that evaluates to an array to map this function on.
+     * @param arguments    zero or more expressions as arguments to the function.
+     * @return the {@link FunctionNode}.
+     */
+    public static FunctionNode mapOnExpression(String functionName, ToExpression on, ToExpression... arguments) {
+        return mapOnExpression(functionName, SourceLocation.none(), on, arguments);
+    }
+
+    /**
+     * Constructs a {@link FunctionNode} that maps the given function over an array and arguments.
+     *
+     * @param functionName   the function name.
+     * @param sourceLocation the source location for the function.
+     * @param on             an expression that evaluates to an array to map this function on.
+     * @param arguments      zero or more expressions as arguments to the function.
+     * @return the {@link FunctionNode}.
+     */
+    public static FunctionNode mapOnExpression(
+            String functionName,
+            FromSourceLocation sourceLocation,
+            ToExpression on,
+            ToExpression... arguments
+    ) {
+        return builder()
+                .sourceLocation(sourceLocation)
+                .name(StringNode.from(functionName))
+                .map(on)
                 .arguments(Arrays.asList(arguments))
                 .build();
     }
@@ -102,6 +140,7 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
         return builder()
                 .sourceLocation(function)
                 .name(function.expectStringMember(FN))
+                .map(function.getMember(MAP).map((node) -> Expression.fromNode(node)))
                 .arguments(arguments)
                 .build();
     }
@@ -135,6 +174,14 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
         return arguments;
     }
 
+    public boolean isMap() {
+        return map.isPresent();
+    }
+
+    public Optional<Expression> getMap() {
+        return map;
+    }
+
     @Override
     public SourceLocation getSourceLocation() {
         return sourceLocation;
@@ -148,21 +195,24 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
     public Builder toBuilder() {
         return builder()
                 .sourceLocation(sourceLocation)
+                .map(map)
                 .name(name)
                 .arguments(arguments);
     }
 
     @Override
     public Node toNode() {
-        ArrayNode.Builder builder = ArrayNode.builder();
+        ArrayNode.Builder argumentsBuilder = ArrayNode.builder();
         for (Expression argument : arguments) {
-            builder.withValue(argument.toNode());
+            argumentsBuilder.withValue(argument.toNode());
         }
 
-        return ObjectNode.builder()
+        ObjectNode.Builder builder = ObjectNode.builder()
                 .withMember(FN, name)
-                .withMember(ARGV, builder.build())
-                .build();
+                .withMember(ARGV, argumentsBuilder.build());
+
+        map.ifPresent((exp) -> builder.withMember(MAP, exp.toNode()));
+        return builder.build();
     }
 
     @Override
@@ -174,7 +224,9 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
             return false;
         }
         FunctionNode functionNode = (FunctionNode) o;
-        return name.equals(functionNode.name) && arguments.equals(functionNode.arguments);
+        return name.equals(functionNode.name)
+                && arguments.equals(functionNode.arguments)
+                && map.equals(functionNode.map);
     }
 
     @Override
@@ -186,8 +238,9 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
      * A builder used to create a {@link FunctionNode} class.
      */
     public static final class Builder extends RulesComponentBuilder<Builder, FunctionNode> {
-        private StringNode function;
         private final BuilderRef<List<ToExpression>> argv = BuilderRef.forList();
+        private StringNode function;
+        private Optional<? extends ToExpression> map = Optional.empty();
 
         private Builder() {
             super(SourceLocation.none());
@@ -201,6 +254,16 @@ public final class FunctionNode implements FromSourceLocation, ToNode, ToSmithyB
 
         public Builder name(StringNode functionName) {
             this.function = functionName;
+            return this;
+        }
+
+        public Builder map(ToExpression map) {
+            this.map = Optional.ofNullable(map);
+            return this;
+        }
+
+        public Builder map(Optional<? extends ToExpression> map) {
+            this.map = map;
             return this;
         }
 

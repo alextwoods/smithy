@@ -77,6 +77,15 @@ public interface ExpressionVisitor<R> {
     R visitStringEquals(Expression left, Expression right);
 
     /**
+     * Maps a string quality check.
+     *
+     * @param on an array to map over
+     * @param right the value to compare to
+     * @return the value from the visitor
+     */
+    R visitMapStringEquals(Expression on, Expression right);
+
+    /**
      * Visits a library function.
      *
      * @param fn the library function to visit.
@@ -84,6 +93,17 @@ public interface ExpressionVisitor<R> {
      * @return the value from the visitor.
      */
     R visitLibraryFunction(FunctionDefinition fn, List<Expression> args);
+
+    /**
+     * Visits mapping a library function on an array.
+     * @param fn the library function to visit
+     * @param on the array the function is being mapped on.
+     * @param args additional arguments to the function being visited.
+     * @return the value from the visitor
+     */
+    R visitMapLibraryFunction(FunctionDefinition fn, Expression on, List<Expression> args);
+
+    R visitSelectSet(Expression arg);
 
     abstract class Default<R> implements ExpressionVisitor<R> {
         public abstract R getDefault();
@@ -124,7 +144,22 @@ public interface ExpressionVisitor<R> {
         }
 
         @Override
+        public R visitMapStringEquals(Expression on, Expression right) {
+            return getDefault();
+        }
+
+        @Override
         public R visitLibraryFunction(FunctionDefinition fn, List<Expression> args) {
+            return getDefault();
+        }
+
+        @Override
+        public R visitMapLibraryFunction(FunctionDefinition fn, Expression on, List<Expression> args) {
+            return getDefault();
+        }
+
+        @Override
+        public R visitSelectSet(Expression arg) {
             return getDefault();
         }
     }

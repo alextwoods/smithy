@@ -57,9 +57,21 @@ public final class StringEquals extends LibraryFunction {
         return ofExpressions(arg1, Expression.of(arg2));
     }
 
+    public static StringEquals mapOnExpression(ToExpression on, ToExpression arg) {
+        return DEFINITION.createFunction(FunctionNode.mapOnExpression(ID, on, arg));
+    }
+
+    public static StringEquals mapOnExpression(ToExpression on, String arg) {
+        return mapOnExpression(on, Expression.of(arg));
+    }
+
     @Override
     public <R> R accept(ExpressionVisitor<R> visitor) {
-        return visitor.visitStringEquals(functionNode.getArguments().get(0), functionNode.getArguments().get(1));
+        if (functionNode.isMap()) {
+            return visitor.visitMapStringEquals(functionNode.getMap().get(), functionNode.getArguments().get(0));
+        } else {
+            return visitor.visitStringEquals(functionNode.getArguments().get(0), functionNode.getArguments().get(1));
+        }
     }
 
     /**

@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import software.amazon.smithy.rulesengine.language.Endpoint;
 import software.amazon.smithy.rulesengine.language.EndpointRuleSet;
+import software.amazon.smithy.rulesengine.language.evaluation.value.ArrayValue;
 import software.amazon.smithy.rulesengine.language.evaluation.value.EndpointValue;
+import software.amazon.smithy.rulesengine.language.evaluation.value.StringValue;
 import software.amazon.smithy.rulesengine.language.evaluation.value.Value;
 import software.amazon.smithy.rulesengine.language.syntax.Identifier;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.Expression;
@@ -120,6 +122,19 @@ public class RuleEvaluator implements ExpressionVisitor<Value> {
     }
 
     @Override
+    public Value visitMapStringEquals(Expression on, Expression right) {
+         StringValue rightValue = right.accept(this).expectStringValue();
+
+        ArrayValue onValues = on.accept(this).expectArrayValue();
+        List<Value> returnValues = new ArrayList<>();
+        for (Value element : onValues.getValues()) {
+            returnValues.add(Value.booleanValue(element.expectStringValue()
+                    .equals(rightValue.expectStringValue())));
+        }
+        return Value.arrayValue(returnValues);
+    }
+
+    @Override
     public Value visitGetAttr(GetAttr getAttr) {
         return getAttr.evaluate(getAttr.getTarget().accept(this));
     }
@@ -131,6 +146,35 @@ public class RuleEvaluator implements ExpressionVisitor<Value> {
             values.add(argument.accept(this));
         }
         return definition.evaluate(values);
+    }
+
+    @Override
+    public Value visitMapLibraryFunction(FunctionDefinition definition, Expression on, List<Expression> arguments) {
+        List<Value> argumentValues = new ArrayList<>();
+        argumentValues.add(Value.emptyValue()); // place holder value for element
+
+        for (Expression argument : arguments) {
+            argumentValues.add(argument.accept(this));
+        }
+        ArrayValue onValues = on.accept(this).expectArrayValue();
+        List<Value> returnValues = new ArrayList<>();
+        for (Value element : onValues.getValues()) {
+            argumentValues.set(0, element);
+            returnValues.add(definition.evaluate(argumentValues));
+        }
+        return Value.arrayValue(returnValues);
+    }
+
+    @Override
+    public Value visitSelectSet(Expression arg) {
+        ArrayValue values = arg.accept(this).expectArrayValue();
+        List<Value> returnValues = new ArrayList<>();
+        for (Value element : values.getValues()) {
+            if (!element.isEmpty()) {
+                returnValues.add(element);
+            }
+        }
+        return Value.arrayValue(returnValues);
     }
 
     private Value handleRule(Rule rule) {
