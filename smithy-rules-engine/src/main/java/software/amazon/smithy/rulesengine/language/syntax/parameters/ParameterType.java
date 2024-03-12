@@ -97,7 +97,7 @@ public enum ParameterType {
         }
         if (type instanceof ArrayType) {
             ArrayType arrayType = (ArrayType) type;
-            if (arrayType.getMember().isA(Type.stringType())) {
+            if (arrayType.getMember().isA(Type.stringType()) || arrayType.getMember().isA(Type.emptyType())) {
                 return STRING_ARRAY;
             }
         }

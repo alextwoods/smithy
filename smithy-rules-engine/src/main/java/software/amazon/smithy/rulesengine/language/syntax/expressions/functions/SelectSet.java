@@ -39,7 +39,7 @@ public final class SelectSet extends LibraryFunction {
     /**
      * Creates a {@link SelectSet} function from the given expressions.
      *
-     * @param arg1 the expression to negate.
+     * @param arg1 the array to select set values from.
      * @return The resulting {@link IsSet} function.
      */
     public static SelectSet ofExpressions(ToExpression arg1) {

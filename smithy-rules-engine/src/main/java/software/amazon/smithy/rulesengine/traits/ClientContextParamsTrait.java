@@ -64,7 +64,7 @@ public final class ClientContextParamsTrait extends AbstractTrait implements ToS
 
             Map<String, ClientContextParamDefinition> parameters = new LinkedHashMap<>();
             value.expectObjectNode().getMembers().forEach((stringNode, node) -> {
-                parameters.put(stringNode.getValue(), mapper.deserialize(node, ClientContextParamDefinition.class));
+                parameters.put(stringNode.getValue(), ClientContextParamDefinition.fromNode(node));
             });
 
             ClientContextParamsTrait trait = builder()

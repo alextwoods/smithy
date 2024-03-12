@@ -57,12 +57,28 @@ public final class StringEquals extends LibraryFunction {
         return ofExpressions(arg1, Expression.of(arg2));
     }
 
-    public static StringEquals mapOnExpression(ToExpression on, ToExpression arg) {
+    /**
+     * Creates a {@link StringEquals} function mapped on over `on`, comparing each value
+     * to `arg`.
+     *
+     * @param on an array to map over.
+     * @param arg the argument to compare.
+     * @return The resulting {@link StringEquals} function.
+     */
+    public static StringEquals mapOnExpressions(ToExpression on, ToExpression arg) {
         return DEFINITION.createFunction(FunctionNode.mapOnExpression(ID, on, arg));
     }
 
-    public static StringEquals mapOnExpression(ToExpression on, String arg) {
-        return mapOnExpression(on, Expression.of(arg));
+    /**
+     * Creates a {@link StringEquals} function mapped on over `on`, comparing each value
+     * to `arg`.
+     *
+     * @param on an array to map over.
+     * @param arg the argument to compare.
+     * @return The resulting {@link StringEquals} function.
+     */
+    public static StringEquals mapOnExpressions(ToExpression on, String arg) {
+        return mapOnExpressions(on, Expression.of(arg));
     }
 
     @Override

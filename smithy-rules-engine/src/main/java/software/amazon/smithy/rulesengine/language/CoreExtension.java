@@ -6,6 +6,8 @@
 package software.amazon.smithy.rulesengine.language;
 
 import java.util.List;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.All;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Any;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.BooleanEquals;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.FunctionDefinition;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.GetAttr;
@@ -13,6 +15,7 @@ import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.IsValidHostLabel;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Not;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.ParseUrl;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.SelectSet;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.StringEquals;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Substring;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.UriEncode;
@@ -40,7 +43,10 @@ public class CoreExtension implements EndpointRuleSetExtension {
                 ParseUrl.getDefinition(),
                 StringEquals.getDefinition(),
                 Substring.getDefinition(),
-                UriEncode.getDefinition()
+                UriEncode.getDefinition(),
+                All.getDefinition(),
+                Any.getDefinition(),
+                SelectSet.getDefinition()
         );
     }
 }

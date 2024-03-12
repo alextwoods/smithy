@@ -27,6 +27,8 @@ structure contextParam {
     /// The rule-set parameter name.
     @required
     name: String
+    /// A JMESPath expression to bind this parameter to.
+    path: String
 }
 
 /// Binds one or more named rule-set parameters to the defined static value for the targeted operation.
@@ -83,6 +85,8 @@ enum ShapeType {
 
     /// Indicates a Smithy boolean shape type.
     BOOLEAN = "boolean"
+
+    STRING_ARRAY = "stringArray"
 }
 
 /// A list of endpoint rule-set tests.

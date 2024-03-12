@@ -7,6 +7,9 @@ package software.amazon.smithy.rulesengine.traits;
 
 import java.util.Objects;
 import java.util.Optional;
+
+import software.amazon.smithy.model.node.Node;
+import software.amazon.smithy.model.node.ObjectNode;
 import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.SmithyUnstableApi;
@@ -27,6 +30,21 @@ public final class ClientContextParamDefinition implements ToSmithyBuilder<Clien
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static ClientContextParamDefinition fromNode(Node node) {
+        ObjectNode objectNode = node.expectObjectNode();
+        Builder builder = builder();
+        objectNode.getStringMember("documentation")
+                .ifPresent((n) -> builder.documentation(n.getValue()));
+        String typeString = objectNode.expectStringMember("type").getValue();
+
+        if (typeString.equals("stringArray")) {
+            builder.type(ShapeType.LIST);
+        } else {
+            builder.type(ShapeType.fromString(typeString).get());
+        }
+        return builder.build();
     }
 
     public ShapeType getType() {
