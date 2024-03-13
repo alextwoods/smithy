@@ -1,2 +1,5 @@
-[WARNING] smithy.example#OperationArray: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait
-[ERROR] smithy.example#OperationArray: The operation `smithy.example#OperationArray` is marked with `smithy.rules#staticContextParams` which contains a key `arrayParam` with an unsupported document type value `array`. | StaticContextParamsTrait
+[WARNING] smithy.example#OperationValidArray: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait.smithy.rules#staticContextParams
+[WARNING] smithy.example#OperationInvalidArrayMixed: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait.smithy.rules#staticContextParams
+[WARNING] smithy.example#OperationInvalidArrayNumber: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait.smithy.rules#staticContextParams
+[ERROR] smithy.example#OperationInvalidArrayMixed: The operation `smithy.example#OperationInvalidArrayMixed` is marked with `smithy.rules#staticContextParams` which contains a key `arrayParam` with an unsupported array element type(s): 'number'. | StaticContextParamsTrait
+[ERROR] smithy.example#OperationInvalidArrayNumber: The operation `smithy.example#OperationInvalidArrayNumber` is marked with `smithy.rules#staticContextParams` which contains a key `arrayParam` with an unsupported array element type(s): 'number'. | StaticContextParamsTrait

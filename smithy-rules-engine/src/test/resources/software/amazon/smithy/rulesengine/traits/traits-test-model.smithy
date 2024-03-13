@@ -31,7 +31,7 @@ apply ExampleService @endpointRuleSet({
     },
     rules: [
         {
-            "documentation": "Template the region into the URI when FIPS is enabled",
+            "documentation": "Adds values into headers when parameters are set",
             "conditions": [
                 {
                     "fn": "isSet",

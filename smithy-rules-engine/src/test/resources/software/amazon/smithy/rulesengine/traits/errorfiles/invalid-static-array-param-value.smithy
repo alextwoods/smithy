@@ -4,5 +4,11 @@ namespace smithy.example
 
 use smithy.rules#staticContextParams
 
-@staticContextParams(arrayParam: {value: ["foo", "bar"]})
-operation OperationArray {}
+@staticContextParams(arrayParam: {value: ["foo", null, "bar"]})
+operation OperationValidArray {}
+
+@staticContextParams(arrayParam: {value: ["foo", 2]})
+operation OperationInvalidArrayMixed {}
+
+@staticContextParams(arrayParam: {value: [1, 2]})
+operation OperationInvalidArrayNumber {}
