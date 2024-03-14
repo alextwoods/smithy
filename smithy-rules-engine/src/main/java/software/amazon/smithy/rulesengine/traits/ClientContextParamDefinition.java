@@ -7,7 +7,6 @@ package software.amazon.smithy.rulesengine.traits;
 
 import java.util.Objects;
 import java.util.Optional;
-
 import software.amazon.smithy.model.node.Node;
 import software.amazon.smithy.model.node.ObjectNode;
 import software.amazon.smithy.model.shapes.ShapeType;

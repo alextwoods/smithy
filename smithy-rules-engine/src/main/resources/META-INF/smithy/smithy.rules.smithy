@@ -27,8 +27,19 @@ structure contextParam {
     /// The rule-set parameter name.
     @required
     name: String
-    /// A JMESPath expression to bind this parameter to.
-    path: String
+}
+
+
+/// Binds one or more named rule-set parameters to elements contained in the operation's input structure.
+/// The type of the shapes targeted by the trait MUST match the parameter types defined in the rule-set.
+@unstable
+@trait(selector: "operation")
+map operationContextParams {
+    /// The rule-set parameter name.
+    key: String,
+
+    /// The static parameter definition.
+    value: OperationContextParamDefinition
 }
 
 /// Binds one or more named rule-set parameters to the defined static value for the targeted operation.
@@ -53,6 +64,15 @@ map clientContextParams {
 
     /// The client parameter definition.
     value: ClientContextParamDefinition
+}
+
+/// An operation context parameter definition.
+@unstable
+@private
+structure OperationContextParamDefinition {
+    /// a JMESPath expression to select the input element to bind to.
+    @required
+    path: String
 }
 
 /// A static context parameter definition.
