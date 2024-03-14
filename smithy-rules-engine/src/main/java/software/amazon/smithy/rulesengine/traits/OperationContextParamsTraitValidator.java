@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import software.amazon.smithy.jmespath.ExpressionProblem;
 import software.amazon.smithy.jmespath.JmespathException;
 import software.amazon.smithy.jmespath.JmespathExpression;
 import software.amazon.smithy.jmespath.LinterResult;
@@ -82,7 +80,7 @@ public final class OperationContextParamsTraitValidator extends AbstractValidato
                                         entry.getValue().getPath(),
                                         String.join(", ",
                                                 linterResult.getProblems().stream()
-                                                        .map( p -> "'" + p.toString() + "'")
+                                                        .map(p -> "'" + p.toString() + "'")
                                                         .collect(Collectors.toList()))
                                 )));
                     }

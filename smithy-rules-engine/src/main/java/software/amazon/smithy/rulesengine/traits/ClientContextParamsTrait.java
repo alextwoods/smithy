@@ -60,8 +60,6 @@ public final class ClientContextParamsTrait extends AbstractTrait implements ToS
 
         @Override
         public Trait createTrait(ShapeId target, Node value) {
-            NodeMapper mapper = new NodeMapper();
-
             Map<String, ClientContextParamDefinition> parameters = new LinkedHashMap<>();
             value.expectObjectNode().getMembers().forEach((stringNode, node) -> {
                 parameters.put(stringNode.getValue(), ClientContextParamDefinition.fromNode(node));
