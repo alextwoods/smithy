@@ -18,16 +18,16 @@ import software.amazon.smithy.utils.SmithyUnstableApi;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
 /**
- * Indicates that the named rule-set parameters that should be configurable
- * on the service client using the specified smithy types.
+ * Binds elements of a target operation's input to rule-set parameters.
  */
 @SmithyUnstableApi
-public final class ClientContextParamsTrait extends AbstractTrait implements ToSmithyBuilder<ClientContextParamsTrait> {
-    public static final ShapeId ID = ShapeId.from("smithy.rules#clientContextParams");
+public final class OperationContextParamsTrait extends AbstractTrait
+        implements ToSmithyBuilder<OperationContextParamsTrait> {
+    public static final ShapeId ID = ShapeId.from("smithy.rules#operationContextParams");
 
-    private final Map<String, ClientContextParamDefinition> parameters;
+    private final Map<String, OperationContextParamDefinition> parameters;
 
-    public ClientContextParamsTrait(Builder builder) {
+    private OperationContextParamsTrait(Builder builder) {
         super(ID, builder.getSourceLocation());
         this.parameters = builder.parameters.copy();
     }
@@ -36,21 +36,22 @@ public final class ClientContextParamsTrait extends AbstractTrait implements ToS
         return new Builder();
     }
 
-    public Map<String, ClientContextParamDefinition> getParameters() {
+    public Map<String, OperationContextParamDefinition> getParameters() {
         return parameters;
     }
 
     @Override
     protected Node createNode() {
         NodeMapper mapper = new NodeMapper();
-        return mapper.serialize(this.getParameters()).expectObjectNode();
+        mapper.setOmitEmptyValues(true);
+        return mapper.serialize(getParameters()).expectObjectNode();
     }
 
     @Override
     public Builder toBuilder() {
-        return builder()
+        return new Builder()
                 .sourceLocation(getSourceLocation())
-                .parameters(getParameters());
+                .parameters(parameters);
     }
 
     public static final class Provider extends AbstractTrait.Provider {
@@ -60,33 +61,33 @@ public final class ClientContextParamsTrait extends AbstractTrait implements ToS
 
         @Override
         public Trait createTrait(ShapeId target, Node value) {
-            Map<String, ClientContextParamDefinition> parameters = new LinkedHashMap<>();
+            NodeMapper mapper = new NodeMapper();
+            Map<String, OperationContextParamDefinition> parameters = new LinkedHashMap<>();
             value.expectObjectNode().getMembers().forEach((stringNode, node) -> {
-                parameters.put(stringNode.getValue(), ClientContextParamDefinition.fromNode(node));
+                parameters.put(stringNode.getValue(), mapper.deserialize(node, OperationContextParamDefinition.class));
             });
-
-            ClientContextParamsTrait trait = builder()
-                    .parameters(parameters)
+            OperationContextParamsTrait trait = builder()
                     .sourceLocation(value)
+                    .parameters(parameters)
                     .build();
             trait.setNodeCache(value);
             return trait;
         }
     }
 
-    public static final class Builder extends AbstractTraitBuilder<ClientContextParamsTrait, Builder> {
-        private final BuilderRef<Map<String, ClientContextParamDefinition>> parameters = BuilderRef.forOrderedMap();
+    public static final class Builder extends AbstractTraitBuilder<OperationContextParamsTrait, Builder> {
+        private final BuilderRef<Map<String, OperationContextParamDefinition>> parameters = BuilderRef.forOrderedMap();
 
         private Builder() {
         }
 
-        public Builder parameters(Map<String, ClientContextParamDefinition> parameters) {
+        public Builder parameters(Map<String, OperationContextParamDefinition> parameters) {
             this.parameters.clear();
             this.parameters.get().putAll(parameters);
             return this;
         }
 
-        public Builder putParameter(String name, ClientContextParamDefinition definition) {
+        public Builder putParameter(String name, OperationContextParamDefinition definition) {
             this.parameters.get().put(name, definition);
             return this;
         }
@@ -102,8 +103,8 @@ public final class ClientContextParamsTrait extends AbstractTrait implements ToS
         }
 
         @Override
-        public ClientContextParamsTrait build() {
-            return new ClientContextParamsTrait(this);
+        public OperationContextParamsTrait build() {
+            return new OperationContextParamsTrait(this);
         }
     }
 }

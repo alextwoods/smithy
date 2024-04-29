@@ -105,7 +105,9 @@ public final class GetAttr extends LibraryFunction {
                         throw new InvalidRulesException("Invalid path component: slice index must be >= 0",
                                 sourceLocation);
                     }
-                    result.add(Part.Key.of(component.substring(0, slicePartIndex)));
+                    if (slicePartIndex > 0) {
+                        result.add(Part.Key.of(component.substring(0, slicePartIndex)));
+                    }
                     result.add(new Part.Index(slice));
                 } catch (NumberFormatException ex) {
                     throw new InvalidRulesException(String.format("%s could not be parsed as a number", slicePart),
@@ -202,40 +204,6 @@ public final class GetAttr extends LibraryFunction {
     @Override
     public String toString() {
         return target + "#" + unparsedPath;
-    }
-
-    /**
-     * A {@link FunctionDefinition} for the {@link GetAttr} function.
-     */
-    public static final class Definition implements FunctionDefinition {
-        private Definition() {}
-
-        @Override
-        public String getId() {
-            return ID;
-        }
-
-        @Override
-        public List<Type> getArguments() {
-            // First argument is array or record, so we need to use any here and typecheck it elsewhere.
-            return ListUtils.of(Type.anyType(), Type.stringType());
-        }
-
-        @Override
-        public Type getReturnType() {
-            return Type.anyType();
-        }
-
-        @Override
-        public Value evaluate(List<Value> arguments) {
-            // Specialized in the ExpressionVisitor, so this doesn't need an implementation.
-            return null;
-        }
-
-        @Override
-        public GetAttr createFunction(FunctionNode functionNode) {
-            return new GetAttr(functionNode);
-        }
     }
 
     public interface Part {
@@ -336,6 +304,41 @@ public final class GetAttr extends LibraryFunction {
             public String toString() {
                 return String.format("[%s]", index);
             }
+        }
+    }
+
+    /**
+     * A {@link FunctionDefinition} for the {@link GetAttr} function.
+     */
+    public static final class Definition implements FunctionDefinition {
+        private Definition() {
+        }
+
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        @Override
+        public List<Type> getArguments() {
+            // First argument is array or record, so we need to use any here and typecheck it elsewhere.
+            return ListUtils.of(Type.anyType(), Type.stringType());
+        }
+
+        @Override
+        public Type getReturnType() {
+            return Type.anyType();
+        }
+
+        @Override
+        public Value evaluate(List<Value> arguments) {
+            // Specialized in the ExpressionVisitor, so this doesn't need an implementation.
+            return null;
+        }
+
+        @Override
+        public GetAttr createFunction(FunctionNode functionNode) {
+            return new GetAttr(functionNode);
         }
     }
 }

@@ -6,12 +6,18 @@
 package software.amazon.smithy.rulesengine.language.syntax;
 
 import software.amazon.smithy.rulesengine.language.syntax.expressions.Expression;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.All;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Any;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.BooleanEquals;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.FunctionDefinition;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.FunctionNode;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.GetAttr;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.IsSet;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.IsValidHostLabel;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.LibraryFunction;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Not;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.ParseUrl;
+import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.SelectSet;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.StringEquals;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.functions.Substring;
 import software.amazon.smithy.rulesengine.language.syntax.rule.Condition;
@@ -110,6 +116,48 @@ public abstract class SyntaxElement implements ToCondition, ToExpression {
      */
     public final Substring substring(int startIndex, int stopIndex, boolean reverse) {
         return Substring.ofExpressions(toExpression(), startIndex, stopIndex, reverse);
+    }
+
+    /**
+     * Returns an All expression that will return true if all of the values of this expression
+     * match the given value.
+     *
+     * @param value value to compare.
+     * @return the {@link All} function.
+     */
+    public final All all(boolean value) {
+        return All.ofExpressions(toExpression(), value);
+    }
+
+    /**
+     * Returns an Any expression that will return true if any of the values of this expression
+     * match the given value.
+     *
+     * @param value value to compare.
+     * @return the {@link Any} function.
+     */
+    public final Any any(boolean value) {
+        return Any.ofExpressions(toExpression(), value);
+    }
+
+    /**
+     * Returns a SelectSet expression for this instance.
+     *
+     * @return the {@link SelectSet} function.
+     */
+    public final SelectSet selectSet() {
+        return SelectSet.ofExpressions(toExpression());
+    }
+
+    /**
+     * Returns the given function mapped over this instance with the additional arguments.
+     *
+     * @param definition function to map over this instance.
+     * @param arguments additional arguments to the function.
+     * @return the {@link LibraryFunction} function.
+     */
+    public LibraryFunction map(FunctionDefinition definition, ToExpression... arguments) {
+        return definition.createFunction(FunctionNode.mapOnExpression(definition.getId(), toExpression(), arguments));
     }
 
     /**

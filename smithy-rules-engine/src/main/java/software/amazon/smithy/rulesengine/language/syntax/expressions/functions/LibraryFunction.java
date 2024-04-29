@@ -33,6 +33,23 @@ public abstract class LibraryFunction extends Expression {
         this.functionNode = functionNode;
     }
 
+    private static String ordinal(int arg) {
+        switch (arg) {
+            case 1:
+                return "first";
+            case 2:
+                return "second";
+            case 3:
+                return "third";
+            case 4:
+                return "fourth";
+            case 5:
+                return "fifth";
+            default:
+                return String.format("%s", arg);
+        }
+    }
+
     /**
      * Returns the name of this function, eg. {@code isSet}, {@code parseUrl}
      *
@@ -66,12 +83,21 @@ public abstract class LibraryFunction extends Expression {
     protected Type typeCheckLocal(Scope<Type> scope) {
         RuleError.context(String.format("while typechecking the invocation of %s", definition.getId()), this, () -> {
             try {
-                checkTypeSignature(definition.getArguments(), functionNode.getArguments(), scope);
+                if (functionNode.isMap()) {
+                    checkTypeSignature(definition.getArguments(), functionNode.getMap().get(),
+                            functionNode.getArguments(), scope);
+                } else {
+                    checkTypeSignature(definition.getArguments(), functionNode.getArguments(), scope);
+                }
             } catch (InnerParseError e) {
                 throw new RuntimeException(e.getMessage());
             }
         });
-        return definition.getReturnType();
+        if (functionNode.isMap()) {
+            return Type.arrayType(definition.getReturnType());
+        } else {
+            return definition.getReturnType();
+        }
     }
 
     private void checkTypeSignature(List<Type> expectedArgs, List<Expression> actualArguments, Scope<Type> scope)
@@ -91,7 +117,7 @@ public abstract class LibraryFunction extends Expression {
                 Type optAny = Type.optionalType(Type.anyType());
                 String hint = "";
                 if (actual.isA(optAny) && !expected.isA(optAny)
-                            && actual.expectOptionalType().inner().equals(expected)) {
+                        && actual.expectOptionalType().inner().equals(expected)) {
                     hint = String.format(
                             "hint: use `assign` in a condition or `isSet(%s)` to prove that this value is non-null",
                             actualArguments.get(i));
@@ -106,20 +132,63 @@ public abstract class LibraryFunction extends Expression {
         }
     }
 
-    private static String ordinal(int arg) {
-        switch (arg) {
-            case 1:
-                return "first";
-            case 2:
-                return "second";
-            case 3:
-                return "third";
-            case 4:
-                return "fourth";
-            case 5:
-                return "fifth";
-            default:
-                return String.format("%s", arg);
+    // check types when mapping this function over an array
+    private void checkTypeSignature(
+            List<Type> expectedArgs, Expression mappedOn, List<Expression> actualArguments, Scope<Type> scope)
+            throws InnerParseError {
+        // the first argument to the function will be the element from the mappedOn
+        if ((expectedArgs.size() - 1) != actualArguments.size()) {
+            throw new InnerParseError(
+                    String.format(
+                            "Expected %s arguments but found %s",
+                            expectedArgs.size() - 1,
+                            actualArguments)
+            );
+        }
+        Type optAny = Type.optionalType(Type.anyType());
+
+        // check the type of the first argument
+        // mappedOn must produce an array<T>
+        Type mappedOnType = mappedOn.typeCheck(scope);
+        Type expectedElementType = expectedArgs.get(0);
+        Type expectedMappedType = Type.arrayType(expectedElementType);
+
+        if (!mappedOnType.isA(expectedMappedType)) {
+            String hint = "";
+            if (mappedOnType.isA(optAny)) {
+                hint = String.format(
+                        "hint: use `assign` in a condition or `isSet(%s)` to prove that this value is non-null",
+                        mappedOn);
+            } else if (mappedOnType.isA(Type.arrayType(optAny))) {
+                hint = String.format("hint: use `selectSet(%s) to prove all element values are non-null`",
+                        mappedOn);
+            }
+            throw new InnerParseError(
+                    String.format(
+                            "Unexpected type in function map: Expected %s but found %s%n%s",
+                            expectedMappedType, mappedOnType, hint)
+            );
+        }
+
+        for (int i = 0; i < expectedArgs.size() - 1; i++) {
+            Type expected = expectedArgs.get(i + 1);
+            Type actual = actualArguments.get(i).typeCheck(scope);
+            if (!expected.isA(actual)) {
+
+                String hint = "";
+                if (actual.isA(optAny) && !expected.isA(optAny)
+                        && actual.expectOptionalType().inner().equals(expected)) {
+                    hint = String.format(
+                            "hint: use `assign` in a condition or `isSet(%s)` to prove that this value is non-null",
+                            actualArguments.get(i));
+                    hint = StringUtils.indent(hint, 2);
+                }
+                throw new InnerParseError(
+                        String.format(
+                                "Unexpected type in the %s argument: Expected %s but found %s%n%s",
+                                ordinal(i + 1), expected, actual, hint)
+                );
+            }
         }
     }
 
@@ -147,10 +216,20 @@ public abstract class LibraryFunction extends Expression {
 
     @Override
     public String toString() {
-        List<String> arguments = new ArrayList<>();
-        for (Expression expression : getArguments()) {
-            arguments.add(expression.toString());
+        if (functionNode.isMap()) {
+            List<String> arguments = new ArrayList<>();
+            arguments.add("e");
+            for (Expression expression : getArguments()) {
+                arguments.add(expression.toString());
+            }
+            String on = functionNode.getMap().get().toString();
+            return on + ".map((e)->" + getName() + "(" + String.join(", ", arguments) + "))";
+        } else {
+            List<String> arguments = new ArrayList<>();
+            for (Expression expression : getArguments()) {
+                arguments.add(expression.toString());
+            }
+            return getName() + "(" + String.join(", ", arguments) + ")";
         }
-        return getName() + "(" + String.join(", ", arguments) + ")";
     }
 }
