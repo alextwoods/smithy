@@ -14,6 +14,9 @@ import java.util.function.Function;
 import software.amazon.smithy.aws.traits.auth.SigV4ATrait;
 import software.amazon.smithy.aws.traits.auth.SigV4Trait;
 import software.amazon.smithy.model.FromSourceLocation;
+import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.knowledge.ServiceIndex;
+import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.validation.Severity;
 import software.amazon.smithy.model.validation.ValidationEvent;
 import software.amazon.smithy.rulesengine.language.Endpoint;
@@ -120,6 +123,8 @@ public final class EndpointAuthUtils {
 
         @Override
         public List<ValidationEvent> validateScheme(
+                Model model,
+                ServiceShape serviceShape,
                 Map<Identifier, Literal> authScheme,
                 FromSourceLocation sourceLocation,
                 BiFunction<FromSourceLocation, String, ValidationEvent> emitter
@@ -169,10 +174,13 @@ public final class EndpointAuthUtils {
 
         @Override
         public List<ValidationEvent> validateScheme(
+                Model model,
+                ServiceShape serviceShape,
                 Map<Identifier, Literal> authScheme,
                 FromSourceLocation sourceLocation,
                 BiFunction<FromSourceLocation, String, ValidationEvent> emitter
         ) {
+            // Validate properties
             List<ValidationEvent> events = noExtraProperties(emitter, sourceLocation, authScheme,
                     ListUtils.of(RuleSetAuthSchemesValidator.NAME,
                             ID_SIGNING_NAME,
@@ -202,6 +210,13 @@ public final class EndpointAuthUtils {
 
             // Validate shared Sigv4 properties.
             events.addAll(SigV4SchemeValidator.validateOptionalSharedProperties(authScheme, emitter));
+
+            // Validate that sigv4a is modeled on the service
+            ServiceIndex serviceIndex = ServiceIndex.of(model);
+            if (!serviceIndex.getEffectiveAuthSchemes(serviceShape).containsKey(SigV4ATrait.ID)) {
+                events.add(emitter.apply(sourceLocation,
+                        "Sigv4a auth trait must be applied to the service."));
+            }
             return events;
         }
     }
@@ -216,6 +231,8 @@ public final class EndpointAuthUtils {
 
         @Override
         public List<ValidationEvent> validateScheme(
+                Model model,
+                ServiceShape serviceShape,
                 Map<Identifier, Literal> authScheme,
                 FromSourceLocation sourceLocation,
                 BiFunction<FromSourceLocation, String, ValidationEvent> emitter
@@ -258,6 +275,8 @@ public final class EndpointAuthUtils {
 
         @Override
         public List<ValidationEvent> validateScheme(
+                Model model,
+                ServiceShape serviceShape,
                 Map<Identifier, Literal> authScheme,
                 FromSourceLocation sourceLocation,
                 BiFunction<FromSourceLocation, String, ValidationEvent> emitter
