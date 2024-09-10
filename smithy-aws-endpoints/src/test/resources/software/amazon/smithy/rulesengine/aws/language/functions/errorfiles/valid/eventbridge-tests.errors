@@ -1,3 +1,4 @@
 [WARNING] example#FizzBuzz: This shape applies a trait that is unstable: smithy.rules#endpointRuleSet | UnstableTrait
 [WARNING] example#FizzBuzz: This shape applies a trait that is unstable: smithy.rules#endpointTests | UnstableTrait
 [WARNING] example#FizzBuzz: This shape applies a trait that is unstable: smithy.rules#clientContextParams | UnstableTrait
+[ERROR] example#FizzBuzz: Sigv4a auth trait must be applied to the service. | RuleSetAuthSchemes

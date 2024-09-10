@@ -37,7 +37,7 @@ public final class RuleSetAuthSchemesValidator extends AbstractValidator {
     public List<ValidationEvent> validate(Model model) {
         List<ValidationEvent> events = new ArrayList<>();
         for (ServiceShape serviceShape : model.getServiceShapesWithTrait(EndpointRuleSetTrait.class)) {
-            Validator validator = new Validator(serviceShape);
+            Validator validator = new Validator(model, serviceShape);
             events.addAll(validator.visitRuleset(
                     serviceShape.expectTrait(EndpointRuleSetTrait.class).getEndpointRuleSet())
                                   .collect(Collectors.toList()));
@@ -47,9 +47,11 @@ public final class RuleSetAuthSchemesValidator extends AbstractValidator {
 
     private class Validator extends TraversingVisitor<ValidationEvent> {
         private final ServiceShape serviceShape;
+        private final Model model;
 
-        Validator(ServiceShape serviceShape) {
+        Validator(Model model, ServiceShape serviceShape) {
             this.serviceShape = serviceShape;
+            this.model = model;
         }
 
         @Override
@@ -82,7 +84,7 @@ public final class RuleSetAuthSchemesValidator extends AbstractValidator {
                             duplicateAuthSchemeNames.add(schemeName);
                         }
 
-                        events.addAll(validateAuthScheme(schemeName, authScheme, authSchemeEntry));
+                        events.addAll(validateAuthScheme(model, serviceShape, schemeName, authScheme, authSchemeEntry));
                     } else {
                         events.add(emitter.apply(authSchemes,
                                 String.format("Expected `authSchemes` to be a list of objects, but found: `%s`",
@@ -113,6 +115,8 @@ public final class RuleSetAuthSchemesValidator extends AbstractValidator {
         }
 
         private List<ValidationEvent> validateAuthScheme(
+                Model model,
+                ServiceShape serviceShape,
                 String schemeName,
                 Map<Identifier, Literal> authScheme,
                 FromSourceLocation sourceLocation
@@ -124,7 +128,7 @@ public final class RuleSetAuthSchemesValidator extends AbstractValidator {
             boolean validatedAuth = false;
             for (AuthSchemeValidator authSchemeValidator : EndpointRuleSet.getAuthSchemeValidators()) {
                 if (authSchemeValidator.test(schemeName)) {
-                    events.addAll(authSchemeValidator.validateScheme(authScheme, sourceLocation, emitter));
+                    events.addAll(authSchemeValidator.validateScheme(model,serviceShape, authScheme, sourceLocation, emitter));
                     validatedAuth = true;
                 }
             }
