@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import software.amazon.smithy.model.FromSourceLocation;
+import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.validation.ValidationEvent;
 import software.amazon.smithy.rulesengine.language.syntax.Identifier;
 import software.amazon.smithy.rulesengine.language.syntax.expressions.literal.Literal;
@@ -24,12 +26,16 @@ public interface AuthSchemeValidator extends Predicate<String> {
      * Validates that the provided {@code authScheme} matches required modeling behavior,
      * emitting events for any failures.
      *
+     * @param model the model being validated.
+     * @param serviceShape service being validated.
      * @param authScheme an authorization scheme parameter set.
      * @param sourceLocation the location of the authorization scheme to generate events from.
      * @param emitter a function to emit {@link ValidationEvent}s for validation failures.
      * @return a list of validation events.
      */
     List<ValidationEvent> validateScheme(
+            Model model,
+            ServiceShape serviceShape,
             Map<Identifier, Literal> authScheme,
             FromSourceLocation sourceLocation,
             BiFunction<FromSourceLocation, String, ValidationEvent> emitter);

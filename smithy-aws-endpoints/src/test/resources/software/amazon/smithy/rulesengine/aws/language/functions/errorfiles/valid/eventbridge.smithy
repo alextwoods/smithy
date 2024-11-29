@@ -2,6 +2,8 @@ $version: "2.0"
 
 namespace example
 
+use aws.auth#sigv4
+use aws.auth#sigv4a
 use smithy.rules#clientContextParams
 use smithy.rules#endpointRuleSet
 
@@ -335,4 +337,7 @@ use smithy.rules#endpointRuleSet
 @clientContextParams(
   endpointId: {type: "string", documentation: "docs"}
 )
+@auth([sigv4, sigv4a])
+@sigv4(name: "fizzbuzz")
+@sigv4a(name: "fizzbuzz")
 service FizzBuzz {}
