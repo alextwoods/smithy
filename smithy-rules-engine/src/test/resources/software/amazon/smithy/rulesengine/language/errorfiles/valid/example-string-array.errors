@@ -1,0 +1,6 @@
+[WARNING] example#FizzBuzz: This shape applies a trait that is unstable: smithy.rules#endpointRuleSet | UnstableTrait.smithy.rules#endpointRuleSet
+[WARNING] example#FizzBuzz: This shape applies a trait that is unstable: smithy.rules#endpointTests | UnstableTrait.smithy.rules#endpointTests
+[WARNING] example#EmptyStaticContextOperation: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait.smithy.rules#staticContextParams
+[WARNING] example#StaticContextOperation: This shape applies a trait that is unstable: smithy.rules#staticContextParams | UnstableTrait.smithy.rules#staticContextParams
+[WARNING] example#ListOfObjectsOperation: This shape applies a trait that is unstable: smithy.rules#operationContextParams | UnstableTrait.smithy.rules#operationContextParams
+[WARNING] example#MapOperation: This shape applies a trait that is unstable: smithy.rules#operationContextParams | UnstableTrait.smithy.rules#operationContextParams
