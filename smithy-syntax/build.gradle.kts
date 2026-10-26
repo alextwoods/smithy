@@ -40,7 +40,9 @@ tasks {
         // smithy-model and smithy-utils aren't shaded. These are normal dependencies that we want consumers to resolve.
         dependencies {
             exclude(project(":smithy-utils"))
+            exclude(project(":smithy-utils-core"))
             exclude(project(":smithy-model"))
+            exclude(project(":smithy-model-core"))
         }
     }
 
