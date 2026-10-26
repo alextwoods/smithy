@@ -42,6 +42,23 @@ tasks {
         classpath = files(modelMain.output, modelMain.compileClasspath)
     }
 
+    // The core isolation guard test loads the two core jars in their own class loader, so it runs
+    // against the packaged jars rather than the test runtime classpath.
+    test {
+        val utilsCore = project(":smithy-utils-core")
+        val coreJars = files(jar, utilsCore.tasks.named("jar"))
+        val classLists = files(coreClassList, utilsCore.file("core-classes.txt"))
+        inputs.files(coreJars).withPropertyName("coreJars").withNormalizer(ClasspathNormalizer::class)
+        inputs.files(classLists).withPropertyName("coreClassLists").withPathSensitivity(PathSensitivity.NONE)
+        jvmArgumentProviders.add(
+            CommandLineArgumentProvider {
+                listOf(
+                    "-Dsmithy.core.jars=${coreJars.asPath}",
+                    "-Dsmithy.core.classLists=${classLists.asPath}",
+                )
+            },
+        )
+    }
 }
 
 dependencies {
