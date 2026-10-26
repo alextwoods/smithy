@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import software.amazon.smithy.model.SourceLocation;
-import software.amazon.smithy.model.validation.ValidationUtils;
 import software.amazon.smithy.utils.BuilderRef;
 import software.amazon.smithy.utils.MapUtils;
 import software.amazon.smithy.utils.SmithyBuilder;
@@ -482,8 +481,8 @@ public final class ObjectNode extends Node implements ToSmithyBuilder<ObjectNode
                 additional.removeAll(allowedProperties);
                 throw new ExpectationNotMetException(String.format(
                         "Expected an object with possible properties of %s, but found additional properties: %s",
-                        ValidationUtils.tickedList(allowedProperties),
-                        ValidationUtils.tickedList(additional)), this);
+                        Node.tickedList(allowedProperties),
+                        Node.tickedList(additional)), this);
             }
         }
 

@@ -14,7 +14,6 @@ import software.amazon.smithy.model.SourceException;
 import software.amazon.smithy.model.SourceLocation;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.ShapeIdSyntaxException;
-import software.amazon.smithy.model.validation.ValidationUtils;
 import software.amazon.smithy.utils.Pair;
 import software.amazon.smithy.utils.SmithyInternalApi;
 
@@ -128,7 +127,7 @@ public final class StringNode extends Node implements Comparable<StringNode> {
         if (!validValues.contains(value)) {
             throw new ExpectationNotMetException(String.format(
                     "Expected one of %s; got `%s`.",
-                    ValidationUtils.tickedList(validValues),
+                    Node.tickedList(validValues),
                     value), this);
         }
         return value;

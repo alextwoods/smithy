@@ -13,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.smithy.model.SourceLocation;
@@ -99,6 +104,40 @@ public class StringNodeTest {
         });
 
         assertThat(thrown.getMessage(), containsString("Expected one of `abc`, `mno`, `xyz`; got `hjk`."));
+    }
+
+    // The expected messages below were captured from the implementation that formatted lists with
+    // ValidationUtils.tickedList, so they also guard against changes to the message text.
+    @Test
+    public void expectOneOfMessageSortsValuesFromVarargs() {
+        ExpectationNotMetException thrown = Assertions.assertThrows(ExpectationNotMetException.class,
+                () -> Node.from("foo").expectOneOf("xyz", "abc", "mno"));
+
+        assertEquals("Expected one of `abc`, `mno`, `xyz`; got `foo`.", thrown.getMessage());
+    }
+
+    @Test
+    public void expectOneOfMessageSortsValuesFromCollections() {
+        Set<String> hashSet = new HashSet<>(Arrays.asList("xyz", "abc", "mno"));
+        Set<String> linkedSet = new LinkedHashSet<>(Arrays.asList("xyz", "abc", "mno"));
+        List<String> mixedCase = Arrays.asList("b", "C", "a", "B");
+        StringNode node = Node.from("foo");
+
+        assertEquals("Expected one of `abc`, `mno`, `xyz`; got `foo`.",
+                Assertions.assertThrows(ExpectationNotMetException.class, () -> node.expectOneOf(hashSet))
+                        .getMessage());
+        assertEquals("Expected one of `abc`, `mno`, `xyz`; got `foo`.",
+                Assertions.assertThrows(ExpectationNotMetException.class, () -> node.expectOneOf(linkedSet))
+                        .getMessage());
+        assertEquals("Expected one of `B`, `C`, `a`, `b`; got `foo`.",
+                Assertions.assertThrows(ExpectationNotMetException.class, () -> node.expectOneOf(mixedCase))
+                        .getMessage());
+        assertEquals("Expected one of `only`; got `foo`.",
+                Assertions.assertThrows(ExpectationNotMetException.class,
+                        () -> node.expectOneOf(Collections.singletonList("only"))).getMessage());
+        assertEquals("Expected one of ; got `foo`.",
+                Assertions.assertThrows(ExpectationNotMetException.class,
+                        () -> node.expectOneOf(Collections.emptyList())).getMessage());
     }
 
     @Test
