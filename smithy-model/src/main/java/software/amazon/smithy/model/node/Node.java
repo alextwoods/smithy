@@ -366,6 +366,22 @@ public abstract class Node implements FromSourceLocation, ToNode {
     }
 
     /**
+     * Formats values as a sorted, comma separated list with each value in backticks.
+     *
+     * <p>The output is the same as {@code ValidationUtils.tickedList(Collection)}. Nodes format
+     * their own error messages so that they don't depend on the validation package.
+     *
+     * @param values Values to format.
+     * @return Returns the formatted values, or an empty string if there are none.
+     */
+    static String tickedList(Collection<?> values) {
+        if (values.isEmpty()) {
+            return "";
+        }
+        return values.stream().map(Object::toString).sorted().collect(Collectors.joining("`, `", "`", "`"));
+    }
+
+    /**
      * Gets the type of the node.
      *
      * @return Returns the node type.

@@ -1,0 +1,72 @@
+# Classes from smithy-model that are packaged into smithy-model-core instead of smithy-model.
+# One binary class name per line. Nested and synthetic classes are listed explicitly; there are no
+# wildcards. The smithy-model jar excludes exactly these classes, so the two jars partition the
+# smithy-model class output.
+
+# a5 base
+software.amazon.smithy.model.FromSourceLocation
+software.amazon.smithy.model.SourceException
+software.amazon.smithy.model.SourceLocation
+software.amazon.smithy.model.loader.ModelSyntaxException
+software.amazon.smithy.model.loader.ParserUtils
+software.amazon.smithy.model.node.ArrayNode
+software.amazon.smithy.model.node.ArrayNode$Builder
+software.amazon.smithy.model.node.BooleanNode
+software.amazon.smithy.model.node.ExpectationNotMetException
+software.amazon.smithy.model.node.Node
+software.amazon.smithy.model.node.NodeType
+software.amazon.smithy.model.node.NodeType$1
+software.amazon.smithy.model.node.NodeType$2
+software.amazon.smithy.model.node.NodeType$3
+software.amazon.smithy.model.node.NodeType$4
+software.amazon.smithy.model.node.NodeType$5
+software.amazon.smithy.model.node.NodeType$6
+software.amazon.smithy.model.node.NodeVisitor
+software.amazon.smithy.model.node.NullNode
+software.amazon.smithy.model.node.NumberNode
+software.amazon.smithy.model.node.ObjectNode
+software.amazon.smithy.model.node.ObjectNode$Builder
+software.amazon.smithy.model.node.StringNode
+software.amazon.smithy.model.node.ToNode
+software.amazon.smithy.model.shapes.ShapeId
+software.amazon.smithy.model.shapes.ShapeId$ShapeIdFactory
+software.amazon.smithy.model.shapes.ShapeId$ShapeIdFactory$CacheStripe
+software.amazon.smithy.model.shapes.ShapeIdSyntaxException
+software.amazon.smithy.model.shapes.ToShapeId
+software.amazon.smithy.model.traits.Trait
+software.amazon.smithy.model.traits.TraitService
+
+# JSON parse and print (a6)
+software.amazon.smithy.model.loader.AstReader
+software.amazon.smithy.model.loader.JsonAstReader
+software.amazon.smithy.model.loader.JsonAstReader$StringDedupCache
+software.amazon.smithy.model.loader.JsonAstReader$Token
+software.amazon.smithy.model.loader.JsonNodeParser
+software.amazon.smithy.model.node.internal.JsonWriter
+software.amazon.smithy.model.node.internal.NodeHandler
+software.amazon.smithy.model.node.internal.NodeWriter
+software.amazon.smithy.model.node.internal.PrettyPrintWriter
+
+# cheap missing classes
+software.amazon.smithy.model.loader.ModelSyntaxException$1
+software.amazon.smithy.model.loader.ModelSyntaxException$Builder
+software.amazon.smithy.model.node.Node$1
+software.amazon.smithy.model.node.NodeDiff
+software.amazon.smithy.model.node.NodeVisitor$Default
+
+# reflection passengers (load-only; not initializable without smithy-model)
+software.amazon.smithy.model.shapes.EntityShape
+software.amazon.smithy.model.shapes.ServiceShape
+software.amazon.smithy.model.shapes.Shape
+
+# added in this prototype
+# Switch map for NodeType used by NodeDiff.findDifferences; Node.diff on unequal nodes needs it.
+software.amazon.smithy.model.node.NodeDiff$1
+# Public member enum of Node; Node.class.getClasses() and getDeclaredClasses() need it.
+software.amazon.smithy.model.node.Node$NonNumericFloat
+# Synthetic constructor tag classes; getDeclaredConstructors() on ShapeId, ArrayNode and ObjectNode need them.
+software.amazon.smithy.model.shapes.ShapeId$1
+software.amazon.smithy.model.node.ArrayNode$1
+software.amazon.smithy.model.node.ObjectNode$1
+# Private serialized form of ShapeId (writeReplace/readResolve).
+software.amazon.smithy.model.shapes.ShapeId$SerializationProxy

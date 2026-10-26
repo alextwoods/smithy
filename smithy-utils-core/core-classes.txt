@@ -1,0 +1,30 @@
+# Classes from smithy-utils that are packaged into smithy-utils-core instead of smithy-utils.
+# One binary class name per line. Nested and synthetic classes are listed explicitly; there are no
+# wildcards. The smithy-utils jar excludes exactly these classes, so the two jars partition the
+# smithy-utils class output.
+
+# a5 base
+software.amazon.smithy.utils.BuilderRef
+software.amazon.smithy.utils.CopyOnWriteRef
+software.amazon.smithy.utils.DefaultBuilderRef
+software.amazon.smithy.utils.ListUtils
+software.amazon.smithy.utils.MapUtils
+software.amazon.smithy.utils.Pair
+software.amazon.smithy.utils.SmithyBuilder
+software.amazon.smithy.utils.ToSmithyBuilder
+
+# JSON (a6)
+software.amazon.smithy.utils.NumberUtils
+
+# cheap missing classes
+software.amazon.smithy.utils.ListUtils$1
+software.amazon.smithy.utils.OptionalUtils
+
+# reflection passenger (Shape implements Tagged; loads and initializes on its own)
+software.amazon.smithy.utils.Tagged
+
+# added in this prototype
+# ParserUtils (core) has public methods that take SimpleParser, so ParserUtils.class.getMethods() needs it.
+software.amazon.smithy.utils.SimpleParser
+# Referenced by SimpleParser.
+software.amazon.smithy.utils.SliceMatcher

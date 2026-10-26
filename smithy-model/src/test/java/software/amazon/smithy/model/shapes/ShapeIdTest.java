@@ -11,9 +11,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -351,5 +364,124 @@ public class ShapeIdTest {
                 .build();
 
         assertThat(id.getName(serviceShape), equalTo("FooName"));
+    }
+
+    public static Collection<Object[]> serializableIds() {
+        return Arrays.asList(new Object[][] {
+                {ShapeId.from("ns.foo#Bar"), "ns.foo", "Bar", null},
+                {ShapeId.from("ns.foo#Bar$baz"), "ns.foo", "Bar", "baz"},
+                {ShapeId.fromRelative("ns.foo", "Bar$baz"), "ns.foo", "Bar", "baz"},
+                {ShapeId.fromOptionalNamespace("ns.foo", "Bar"), "ns.foo", "Bar", null},
+                {ShapeId.fromParts("ns.foo", "Bar", "baz"), "ns.foo", "Bar", "baz"},
+                {ShapeId.from("ns.foo#Bar").withMember("qux"), "ns.foo", "Bar", "qux"},
+                {ShapeId.from("ns.foo#Bar$baz").withNamespace("ns.other"), "ns.other", "Bar", "baz"},
+                {ShapeId.from("smithy.api#String"), "smithy.api", "String", null},
+        });
+    }
+
+    @ParameterizedTest
+    @MethodSource("serializableIds")
+    public void serializesAndDeserializesShapeIds(ShapeId id, String namespace, String name, String member)
+            throws Exception {
+        Object result = deserialize(serialize(id));
+
+        assertThat(result, Matchers.instanceOf(ShapeId.class));
+        ShapeId copy = (ShapeId) result;
+        assertEquals(id, copy);
+        assertEquals(id.hashCode(), copy.hashCode());
+        assertEquals(id.toString(), copy.toString());
+        assertEquals(namespace, copy.getNamespace());
+        assertEquals(name, copy.getName());
+        assertEquals(Optional.ofNullable(member), copy.getMember());
+        assertEquals(member != null, copy.hasMember());
+        assertEquals(0, id.compareTo(copy));
+    }
+
+    @Test
+    public void serializesValueObjectsThatHoldShapeIds() throws Exception {
+        Holder holder = new Holder(ShapeId.from("ns.foo#Bar$baz"), "label");
+
+        Object result = deserialize(serialize(holder));
+
+        assertEquals(holder, result);
+        assertEquals("ns.foo#Bar$baz", ((Holder) result).id.toString());
+        assertEquals("baz", ((Holder) result).id.getMember().get());
+    }
+
+    @Test
+    public void rejectsTamperedStreamWithInvalidShapeId() throws Exception {
+        byte[] bytes = serialize(ShapeId.from("a.b#Cd"));
+        replaceOnce(bytes, "a.b#Cd", "a.b#C!");
+
+        InvalidObjectException e = Assertions.assertThrows(InvalidObjectException.class, () -> deserialize(bytes));
+
+        assertThat(e.getCause(), Matchers.instanceOf(ShapeIdSyntaxException.class));
+        assertThat(e.getMessage(), Matchers.containsString("a.b#C!"));
+    }
+
+    @Test
+    public void rejectsDirectDeserialization() throws Exception {
+        // writeReplace always runs when serializing a ShapeId, so a stream that carries ShapeId's own class
+        // descriptor can't be produced with ObjectOutputStream. Call the guard directly instead.
+        Method readObject = ShapeId.class.getDeclaredMethod("readObject", ObjectInputStream.class);
+        readObject.setAccessible(true);
+
+        InvocationTargetException e = Assertions.assertThrows(InvocationTargetException.class,
+                () -> readObject.invoke(ShapeId.from("ns.foo#Bar"), (Object) null));
+
+        assertThat(e.getCause(), Matchers.instanceOf(InvalidObjectException.class));
+    }
+
+    private static byte[] serialize(Object value) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ObjectOutputStream out = new ObjectOutputStream(bytes)) {
+            out.writeObject(value);
+        }
+        return bytes.toByteArray();
+    }
+
+    private static Object deserialize(byte[] bytes) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+            return in.readObject();
+        }
+    }
+
+    private static void replaceOnce(byte[] bytes, String search, String replacement) {
+        byte[] from = search.getBytes(StandardCharsets.UTF_8);
+        byte[] to = replacement.getBytes(StandardCharsets.UTF_8);
+        assertEquals(from.length, to.length);
+        for (int i = 0; i <= bytes.length - from.length; i++) {
+            if (Arrays.equals(Arrays.copyOfRange(bytes, i, i + from.length), from)) {
+                System.arraycopy(to, 0, bytes, i, to.length);
+                return;
+            }
+        }
+        Assertions.fail("Serialized form does not contain " + search);
+    }
+
+    private static final class Holder implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final ShapeId id;
+        private final String label;
+
+        Holder(ShapeId id, String label) {
+            this.id = id;
+            this.label = label;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof Holder)) {
+                return false;
+            }
+            Holder o = (Holder) other;
+            return id.equals(o.id) && label.equals(o.label);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, label);
+        }
     }
 }

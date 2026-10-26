@@ -17,13 +17,19 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -270,6 +276,65 @@ public class ObjectNodeTest {
         node.withMember(Node.from("a"), Node.from("value-1"))
                 .withMember(Node.from("b"), Node.from("value-2"))
                 .warnIfAdditionalProperties(Arrays.asList("foo", "baz"));
+    }
+
+    // The expected messages below were captured from the implementation that formatted lists with
+    // ValidationUtils.tickedList, so they also guard against changes to the message text.
+    @Test
+    public void additionalPropertiesMessageIsSortedAndTicked() {
+        ObjectNode node = Node.objectNodeBuilder()
+                .sourceLocation(new SourceLocation("file.json", 2, 3))
+                .withMember("zed", "1")
+                .withMember("b", "2")
+                .withMember("a", "3")
+                .build();
+
+        ExpectationNotMetException thrown = Assertions.assertThrows(ExpectationNotMetException.class,
+                () -> node.expectNoAdditionalProperties(new LinkedHashSet<>(Arrays.asList("zed", "foo", "baz"))));
+        ExpectationNotMetException empty = Assertions.assertThrows(ExpectationNotMetException.class,
+                () -> node.expectNoAdditionalProperties(Collections.emptyList()));
+
+        // SourceException.getMessage appends the source location.
+        assertEquals("Expected an object with possible properties of `baz`, `foo`, `zed`, but found additional "
+                + "properties: `a`, `b` (file.json [2, 3])", thrown.getMessage());
+        assertEquals("Expected an object with possible properties of , but found additional "
+                + "properties: `a`, `b`, `zed` (file.json [2, 3])", empty.getMessage());
+    }
+
+    @Test
+    public void additionalPropertiesWarningMessageIsSortedAndTicked() {
+        ObjectNode node = Node.objectNodeBuilder()
+                .sourceLocation(new SourceLocation("file.json", 2, 3))
+                .withMember("zed", "1")
+                .withMember("b", "2")
+                .withMember("a", "3")
+                .build();
+        List<LogRecord> records = new ArrayList<>();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {}
+
+            @Override
+            public void close() {}
+        };
+        Logger logger = Logger.getLogger(ObjectNode.class.getName());
+        logger.addHandler(handler);
+        try {
+            assertSame(node, node.warnIfAdditionalProperties(Arrays.asList("zed", "foo", "baz")));
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        assertThat(records, Matchers.hasSize(1));
+        assertEquals(Level.WARNING, records.get(0).getLevel());
+        // The exception message already ends with the source location, and the warning appends it again.
+        assertEquals("Expected an object with possible properties of `baz`, `foo`, `zed`, but found additional "
+                + "properties: `a`, `b` (file.json [2, 3]) (file.json [2, 3])", records.get(0).getMessage());
     }
 
     @Test

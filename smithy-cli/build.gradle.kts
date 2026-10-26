@@ -239,7 +239,9 @@ tasks {
         // to resolve.
         dependencies {
             exclude(project(":smithy-utils"))
+            exclude(project(":smithy-utils-core"))
             exclude(project(":smithy-model"))
+            exclude(project(":smithy-model-core"))
             exclude(project(":smithy-build"))
             exclude(project(":smithy-diff"))
             exclude(project(":smithy-syntax"))

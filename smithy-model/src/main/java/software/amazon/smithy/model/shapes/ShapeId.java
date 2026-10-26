@@ -4,6 +4,10 @@
  */
 package software.amazon.smithy.model.shapes;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +35,9 @@ import software.amazon.smithy.model.node.Node;
  *   <li>Absolute path with a member : {@code name.space#ShapeName$memberName}</li>
  * </ul>
  */
-public final class ShapeId implements ToShapeId, Comparable<ShapeId> {
+public final class ShapeId implements ToShapeId, Comparable<ShapeId>, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** LRA (least recently added) cache of parsed shape IDs. */
     private static final ShapeIdFactory FACTORY = new ShapeIdFactory();
@@ -412,6 +418,52 @@ public final class ShapeId implements ToShapeId, Comparable<ShapeId> {
         }
 
         return h;
+    }
+
+    /**
+     * Serializes the ID as a {@link SerializationProxy} that holds only the absolute shape ID string.
+     *
+     * @return Returns the serialization proxy.
+     */
+    private Object writeReplace() {
+        return new SerializationProxy(toString());
+    }
+
+    /**
+     * Rejects streams that try to deserialize a shape ID directly instead of through its proxy.
+     *
+     * @param in Stream being read.
+     * @throws InvalidObjectException always.
+     */
+    private void readObject(ObjectInputStream in) throws InvalidObjectException {
+        throw new InvalidObjectException("ShapeId must be deserialized through its serialization proxy");
+    }
+
+    /**
+     * Serialized form of a shape ID: the absolute shape ID string, parsed and validated again with
+     * {@link ShapeId#from} when it is read.
+     */
+    private static final class SerializationProxy implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final String id;
+
+        SerializationProxy(String id) {
+            this.id = id;
+        }
+
+        private Object readResolve() throws ObjectStreamException {
+            if (id == null) {
+                throw new InvalidObjectException("Serialized shape ID is missing");
+            }
+            try {
+                return ShapeId.from(id);
+            } catch (ShapeIdSyntaxException e) {
+                InvalidObjectException error = new InvalidObjectException(e.getMessage());
+                error.initCause(e);
+                throw error;
+            }
+        }
     }
 
     /**

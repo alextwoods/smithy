@@ -13,11 +13,44 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.TreeSet;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import software.amazon.smithy.model.shapes.ShapeId;
+import software.amazon.smithy.model.validation.ValidationUtils;
 
 public class NodeTest {
+    public static Stream<Collection<?>> tickedListValues() {
+        return Stream.of(
+                Collections.emptyList(),
+                Collections.emptySet(),
+                Collections.singletonList("only"),
+                new ArrayList<>(Arrays.asList("xyz", "abc", "mno")),
+                new HashSet<>(Arrays.asList("xyz", "abc", "mno", "def", "ghi")),
+                new LinkedHashSet<>(Arrays.asList("xyz", "abc", "mno")),
+                new TreeSet<>(Arrays.asList("b", "a")),
+                Arrays.asList("b", "C", "a", "B", "_x", "1"),
+                Arrays.asList("dup", "dup", "a"),
+                Arrays.asList(ShapeId.from("ns.foo#Zed"), ShapeId.from("ns.foo#Bar$baz"), ShapeId.from("a.b#C")),
+                Arrays.asList(10, 9, 100));
+    }
+
+    @ParameterizedTest
+    @MethodSource("tickedListValues")
+    public void tickedListMatchesValidationUtils(Collection<?> values) {
+        assertThat(Node.tickedList(values), equalTo(ValidationUtils.tickedList(values)));
+    }
+
     @Test
     public void ExpectationExpceptionProvidesAccessToNodeSource() {
         Assertions.assertThrows(ExpectationNotMetException.class, () -> {
